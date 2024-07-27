@@ -10,7 +10,7 @@ import { MapComponent } from './map/map.component';
     MapComponent
   ],
   templateUrl: './app.component.html',
-  styleUrl: './app.component.scss'
+  styleUrl: './app.component.scss',
 })
 export class AppComponent {
 }
