@@ -12,9 +12,8 @@ export interface FileList {
 })
 export class TrackService {
 
-  tracksFolder: string = 'assets/track';
-  // fileList: string = 'assets/fileList.json';
-  fileList: string = 'assets/fileListShort.json';
+  backendServer: string = 'http://localhost:3000'; 
+  tracksPath: string = 'tracks';
 
   constructor(private httpClient: HttpClient) { }
 
@@ -40,9 +39,9 @@ export class TrackService {
   }
 
   createAllTracks(map: L.Map): void {
-    this.httpClient.get<FileList>(this.fileList).subscribe((file: FileList) => {
+    this.httpClient.get<FileList>(`${this.backendServer}/${this.tracksPath}`).subscribe((file: FileList) => {
       file.fileList.forEach(fileName => {
-        this._createTrack(map, `${this.tracksFolder}/${fileName}`)
+        this._createTrack(map, `${this.backendServer}/${this.tracksPath}/${fileName}`)
       });
     });
   }
