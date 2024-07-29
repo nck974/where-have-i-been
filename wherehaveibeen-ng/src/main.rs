@@ -2,6 +2,7 @@ use axum::Router;
 mod routes;
 mod handlers;
 mod utils;
+mod model;
 
 #[tokio::main]
 async fn main() {
