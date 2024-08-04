@@ -10,6 +10,7 @@ use axum::Router;
 use database::tracks_database::{
     get_database_connection, initialize_database, insert_file, read_files_in_database,
 };
+use model::track::TrackInformation;
 use utils::{
     cache_utils::save_cached_coordinates,
     file_utils::{create_folder, get_valid_gps_files},
@@ -43,11 +44,17 @@ fn initialize_data() {
         if let Ok((track_information, coordinates)) =
             get_track_information(path.join(&filename).as_path())
         {
-            insert_file(&mut conn, &filename, track_information).unwrap();
+            insert_file(&mut conn, &filename, track_information, false).unwrap();
             save_cached_coordinates(cache_path, &filename, coordinates).unwrap();
         } else {
             eprintln!("No track information found for {}", filename);
-            // TODO: Insert in the database something with a flag of empty track
+            insert_file(
+                &mut conn,
+                &filename,
+                TrackInformation::new(0.0, 0.0, 0.0, 0.0),
+                true,
+            )
+            .unwrap();
         }
     }
 

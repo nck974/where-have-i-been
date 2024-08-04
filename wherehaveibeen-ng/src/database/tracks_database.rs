@@ -18,11 +18,12 @@ pub fn initialize_database(conn: &mut Connection) -> Result<(), rusqlite::Error>
         "CREATE TABLE IF NOT EXISTS tracks (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             filename TEXT NOT NULL,
-            northwestlongitude REAL NOT NULL,
-            northwestlatitude REAL NOT NULL,
-            southeastlongitude REAL NOT NULL,
-            southeastlatitude REAL NOT NULL,
-            date DATE
+            north_west_latitude REAL NOT NULL,
+            north_west_longitude REAL NOT NULL,
+            south_east_latitude REAL NOT NULL,
+            south_east_longitude REAL NOT NULL,
+            date DATE,
+            is_empty_track INTEGER NOT NULL
         );
     )",
         (), // no params
@@ -52,24 +53,27 @@ pub fn insert_file(
     conn: &mut Connection,
     filename: &str,
     track_information: TrackInformation,
+    is_empty_track: bool,
 ) -> Result<(), rusqlite::Error> {
     dbg!(&track_information);
     conn.execute(
         "INSERT INTO 
             tracks (
                 filename, 
-                northwestlongitude,
-                northwestlatitude,
-                southeastlongitude,
-                southeastlatitude
+                north_west_latitude,
+                north_west_longitude,
+                south_east_latitude,
+                south_east_longitude,
+                is_empty_track
             ) 
-        VALUES (?1, ?2, ?3, ?4, ?5)",
+        VALUES (?1, ?2, ?3, ?4, ?5, ?6)",
         params![
             filename,
-            track_information.north_west_longitude,
             track_information.north_west_latitude,
-            track_information.south_east_longitude,
+            track_information.north_west_longitude,
             track_information.south_east_latitude,
+            track_information.south_east_longitude,
+            is_empty_track
         ],
     )?;
 
@@ -85,56 +89,60 @@ pub fn get_tracks_inside_location(track_information: TrackInformation) -> Result
 FROM 
 	tracks t 
 WHERE 
-	/* Check provided north west is conained inside one track limits*/
-	(
-		:providednorthwestlatitude<= t.northwestlatitude AND  :providednorthwestlatitude >= t.southeastlatitude AND
-		:providednorthwestlongitude >= t.northwestlongitude AND :providednorthwestlongitude <= t.southeastlongitude
-	)
-	/* Check provided limits contain track nort west*/
-	OR (
-		t.northwestlatitude <= :providednorthwestlatitude AND t.northwestlatitude >= :providedsoutheastlatitude AND
-		t.northwestlongitude >= :providednorthwestlongitude AND t.northwestlongitude  <= :providedsoutheastlongitude
-	)
-	/* Check provided south west is conained inside one track limits*/
-	OR (
-		:providedsouthlatitude<= t.northwestlatitude AND  :providedsouthlatitude >= t.southeastlatitude AND
-		:providednorthwestlongitude >= t.northwestlongitude AND :providednorthwestlongitude <= t.southeastlongitude
-	)
-	/* Check provided limits contain track south west*/
-	OR (
-		t.southeastlatitude <= :providednorthwestlatitude AND t.southeastlatitude >= :providedsoutheastlatitude AND
-		t.northwestlongitude >= :providednorthwestlongitude AND t.northwestlongitude  <= :providedsoutheastlongitude
-	)
-	/* Check provided north east is conained inside one track limits*/
-	OR(
-		:providednorthwestlatitude<= t.northwestlatitude AND  :providednorthwestlatitude >= t.southeastlatitude AND
-		:providedsoutheastlongitude >= t.northwestlongitude AND :providedsoutheastlongitude <= t.southeastlongitude
-	)
-	/* Check provided limits contain track nort east*/
-	OR (
-		t.northwestlatitude <= :providednorthwestlatitude AND t.northwestlatitude >= :providedsoutheastlatitude AND
-		t.southeastlongitude >= :providednorthwestlongitude AND t.southeastlongitude  <= :providedsoutheastlongitude
-	)
-	/* Check provided south east is conained inside one track limits*/
-	OR (
-		:providedsouthlatitude<= t.northwestlatitude AND  :providedsouthlatitude >= t.southeastlatitude AND
-		:providedsoutheastlongitude >= t.northwestlongitude AND :providedsoutheastlongitude <= t.southeastlongitude
-	)
-	/* Check provided limits contain track south east*/
-	OR (
-		t.southeastlatitude <= :providednorthwestlatitude AND t.southeastlatitude >= :providedsoutheastlatitude AND
-		t.southeastlongitude >= :providednorthwestlongitude AND t.southeastlongitude  <= :providedsoutheastlongitude
-	)
+    is_empty_track IS FALSE
+    AND
+        (
+            /* Check provided north west is contained inside one track limits*/
+            (
+                :provided_north_west_latitude<= t.north_west_latitude AND  :provided_north_west_latitude >= t.south_east_latitude AND
+                :provided_north_west_longitude >= t.north_west_longitude AND :provided_north_west_longitude <= t.south_east_longitude
+            )
+            /* Check provided limits contain track north west*/
+            OR (
+                t.north_west_latitude <= :provided_north_west_latitude AND t.north_west_latitude >= :provided_south_east_latitude AND
+                t.north_west_longitude >= :provided_north_west_longitude AND t.north_west_longitude  <= :provided_south_east_longitude
+            )
+            /* Check provided south west is contained inside one track limits*/
+            OR (
+                :provided_south_east_latitude<= t.north_west_latitude AND  :provided_south_east_latitude >= t.south_east_latitude AND
+                :provided_north_west_longitude >= t.north_west_longitude AND :provided_north_west_longitude <= t.south_east_longitude
+            )
+            /* Check provided limits contain track south west*/
+            OR (
+                t.south_east_latitude <= :provided_north_west_latitude AND t.south_east_latitude >= :provided_south_east_latitude AND
+                t.north_west_longitude >= :provided_north_west_longitude AND t.north_west_longitude  <= :provided_south_east_longitude
+            )
+            /* Check provided north east is contained inside one track limits*/
+            OR(
+                :provided_north_west_latitude<= t.north_west_latitude AND  :provided_north_west_latitude >= t.south_east_latitude AND
+                :provided_south_east_longitude >= t.north_west_longitude AND :provided_south_east_longitude <= t.south_east_longitude
+            )
+            /* Check provided limits contain track north east*/
+            OR (
+                t.north_west_latitude <= :provided_north_west_latitude AND t.north_west_latitude >= :provided_south_east_latitude AND
+                t.south_east_longitude >= :provided_north_west_longitude AND t.south_east_longitude  <= :provided_south_east_longitude
+            )
+            /* Check provided south east is contained inside one track limits*/
+            OR (
+                :provided_south_east_latitude<= t.north_west_latitude AND  :provided_south_east_latitude >= t.south_east_latitude AND
+                :provided_south_east_longitude >= t.north_west_longitude AND :provided_south_east_longitude <= t.south_east_longitude
+            )
+            /* Check provided limits contain track south east*/
+            OR (
+                t.south_east_latitude <= :provided_north_west_latitude AND t.south_east_latitude >= :provided_south_east_latitude AND
+                t.south_east_longitude >= :provided_north_west_longitude AND t.south_east_longitude  <= :provided_south_east_longitude
+            )
+        )
 ;"
     )?;
 
     let filenames = stmt
         .query_map(
             named_params! {
-                ":providednorthwestlatitude": track_information.north_west_latitude,
-                ":providednorthwestlongitude": track_information.north_west_longitude,
-                ":providedsoutheastlatitude": track_information.south_east_latitude,
-                ":providedsoutheastlongitude": track_information.south_east_longitude,
+                ":provided_north_west_latitude": track_information.north_west_latitude,
+                ":provided_north_west_longitude": track_information.north_west_longitude,
+                ":provided_south_east_latitude": track_information.south_east_latitude,
+                ":provided_south_east_longitude": track_information.south_east_longitude,
             },
             |row| Ok(row.get::<_, String>(0)?),
         )
