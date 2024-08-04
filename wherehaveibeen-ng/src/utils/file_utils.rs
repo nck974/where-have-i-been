@@ -9,7 +9,9 @@ pub fn list_files_in_directory(path: &Path) -> io::Result<Vec<String>> {
         for entry in fs::read_dir(path)? {
             let entry = entry?;
             if let Some(filename) = entry.file_name().to_str() {
-                file_list.push(filename.to_string());
+                if filename.ends_with(".gpx") {
+                    file_list.push(filename.to_string());
+                }
             }
         }
     } else {

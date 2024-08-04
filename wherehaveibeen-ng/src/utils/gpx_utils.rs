@@ -4,7 +4,7 @@ use std::{
     path::{Path, PathBuf},
 };
 
-use crate::model::coordinate::Coordinate;
+use crate::model::{coordinate::Coordinate, track::TrackInformation};
 use quick_xml::{events::Event, reader::Reader};
 
 pub fn read_file_coordinates(path: &Path) -> Result<Vec<Coordinate>> {
@@ -12,10 +12,57 @@ pub fn read_file_coordinates(path: &Path) -> Result<Vec<Coordinate>> {
     read_gpx_file_coordinates(&path.to_path_buf())
 }
 
+pub fn get_track_information(path: &Path) -> Result<TrackInformation> {
+    println!("Extracting track information of file: {}", path.display());
+    let coordinates = read_gpx_file_coordinates(&path.to_path_buf());
+
+    let mut north_west_longitude: f32 = std::f32::NAN;
+    let mut north_west_latitude: f32 = std::f32::NAN;
+    let mut south_east_longitude: f32 = std::f32::NAN;
+    let mut south_east_latitude: f32 = std::f32::NAN;
+    if let Ok(coordinates) = coordinates {
+        for coordinate in coordinates {
+            if north_west_longitude.is_nan() || coordinate.longitude > north_west_longitude {
+                north_west_longitude = coordinate.longitude;
+            }
+
+            if north_west_latitude.is_nan() || coordinate.longitude > north_west_latitude {
+                north_west_latitude = coordinate.latitude;
+            }
+
+            if south_east_longitude.is_nan() || coordinate.longitude < south_east_longitude {
+                south_east_longitude = coordinate.longitude;
+            }
+
+            if south_east_latitude.is_nan() || coordinate.longitude < south_east_latitude {
+                south_east_latitude = coordinate.latitude;
+            }
+        }
+    }
+
+    if north_west_longitude.is_nan()
+        || north_west_latitude.is_nan()
+        || south_east_longitude.is_nan()
+        || south_east_latitude.is_nan()
+    {
+        return Err(Error::new(
+            ErrorKind::InvalidInput,
+            "No coordiantes found the provided file",
+        ));
+    }
+
+    Ok(TrackInformation {
+        north_west_longitude,
+        north_west_latitude,
+        south_east_longitude,
+        south_east_latitude,
+    })
+}
+
 /// .
 /// This function just reads the xml trackpoints of the XML. This may be changed in the future
 /// to also take care of Reding multiple tracks within the file
-/// 
+///
 /// # Panics
 ///
 /// Panics if .

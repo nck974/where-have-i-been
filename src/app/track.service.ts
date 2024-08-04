@@ -15,6 +15,7 @@ export class TrackService {
   backendServer: string = 'http://localhost:3000';
   tracksPath: string = 'tracks';
   coordinatesPath: string = 'tracks/coordinates';
+  filteredTracksPath: string = 'tracks/filtered-tracks';
 
   constructor(private httpClient: HttpClient) { }
 
@@ -62,6 +63,36 @@ export class TrackService {
         if (index == 1) {
           this.createSingleTrack(map, filename);
         }
+      });
+    });
+  }
+
+  //   .get("northWestLongitude")
+  //   .and_then(|v| v.parse::<f32>().ok())
+  //   .unwrap_or_default();
+  // let north_west_latitude = params
+  //   .get("northWestLatitude")
+  //   .and_then(|v| v.parse::<f32>().ok())
+  //   .unwrap_or_default();
+  // let south_east_longitude = params
+  //   .get("southEastLongitude")
+  //   .and_then(|v| v.parse::<f32>().ok())
+  //   .unwrap_or_default();
+  // let south_east_latitude = params
+  //   .get("southEastLatitude")
+
+
+  createTracksInsideSquare(map: L.Map, northEastCoordinate: L.LatLng, southWestCoordinate: L.LatLng): void {
+    const params = `northWestLatitude=${northEastCoordinate.lat}&northWestLongitude=${southWestCoordinate.lng}&` +
+      `southEastLatitude=${southWestCoordinate.lat}&southEastLongitude=${northEastCoordinate.lng}`;
+
+    const url = `${this.backendServer}/${this.filteredTracksPath}?${params}`;
+    this.httpClient.get<FileList>(url).subscribe((file: FileList) => {
+      console.log(file)
+      file.fileList.forEach((filename, index) => {
+        // if (index == 1) {
+          this.createSingleTrack(map, filename);
+        // }
       });
     });
   }

@@ -1,11 +1,16 @@
-use axum::Router;
-mod routes;
+mod database;
 mod handlers;
-mod utils;
 mod model;
+mod routes;
+mod utils;
+
+use axum::Router;
+use database::tracks_database::initialize_database;
 
 #[tokio::main]
 async fn main() {
+    initialize_database();
+
     let app = Router::new().nest("/tracks", routes::tracks::router());
 
     // run our app with hyper, listening globally on port 3000
