@@ -2,7 +2,7 @@ use std::fs;
 use std::io::{Error, ErrorKind};
 use std::path::Path;
 
-pub fn list_files_in_directory(path: &Path) -> Result<Vec<String>, Error> {
+pub fn get_valid_gps_files(path: &Path) -> Result<Vec<String>, Error> {
     let mut file_list = Vec::new();
 
     if !path.is_dir() {
@@ -28,3 +28,13 @@ pub fn read_file(path: &Path) -> Result<String, Error> {
     println!("Reading file: {}", path.display());
     fs::read_to_string(path)
 }
+
+pub fn create_folder(path: &Path) -> Result<(), Error>{
+    fs::create_dir_all(path)
+}
+
+pub fn save_to_file(path: &Path, content: &str) -> Result<(), Error> {
+    println!("Writing to file: {}", path.display());
+    fs::write(path, content)
+}
+

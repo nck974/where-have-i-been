@@ -10,16 +10,17 @@ use std::path::Path as FilePath;
 
 use crate::database::tracks_database::get_tracks_inside_location;
 use crate::model::track::TrackInformation;
-use crate::utils::file_utils::list_files_in_directory;
+use crate::utils::cache_utils::read_cached_coordinates;
+use crate::utils::file_utils::get_valid_gps_files;
 use crate::utils::file_utils::read_file;
-use crate::utils::gpx_utils::read_file_coordinates;
 
 const BASE_PATH: &str =
     "C:\\Users\\nck\\Development\\where-have-i-been\\wherehaveibeen-ng\\data\\track-complete\\";
+const CACHE_FOLDER: &str = "./.cached_tracks";
 
 pub async fn get_tracks() -> impl IntoResponse {
     let path = FilePath::new(BASE_PATH);
-    match list_files_in_directory(path) {
+    match get_valid_gps_files(path) {
         Ok(files) => {
             return Response::builder()
                 .status(StatusCode::OK)
@@ -124,8 +125,8 @@ pub async fn get_track(Path(filename): Path<String>) -> impl IntoResponse {
 }
 
 pub async fn get_track_coordinates(Path(filename): Path<String>) -> impl IntoResponse {
-    let path = FilePath::new(BASE_PATH);
-    match read_file_coordinates(path.join(&filename).as_path()) {
+    let path = FilePath::new(CACHE_FOLDER);
+    match read_cached_coordinates(path.join(&filename).as_path()) {
         Ok(coordinates) => {
             return Response::builder()
                 .status(StatusCode::OK)

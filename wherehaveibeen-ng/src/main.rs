@@ -10,11 +10,16 @@ use axum::Router;
 use database::tracks_database::{
     get_database_connection, initialize_database, insert_file, read_files_in_database,
 };
-use utils::{file_utils::list_files_in_directory, gpx_utils::get_track_information};
+use utils::{
+    cache_utils::save_cached_coordinates,
+    file_utils::{create_folder, get_valid_gps_files},
+    gpx_utils::get_track_information,
+};
 
 // TODO: Move this to a settings file
 const BASE_PATH: &str =
     "C:\\Users\\nck\\Development\\where-have-i-been\\wherehaveibeen-ng\\data\\track-complete\\";
+const CACHE_FOLDER: &str = ".//.cached_tracks";
 
 fn initialize_data() {
     let mut conn = get_database_connection().unwrap();
@@ -25,16 +30,24 @@ fn initialize_data() {
     // that have already been processed
     let processed_files = read_files_in_database(&mut conn);
 
+    // Create the folder where the simplified gpx tracks will be stored
+    let cache_path = Path::new(CACHE_FOLDER);
+    create_folder(&cache_path).unwrap();
+
     let path = Path::new(BASE_PATH);
-    let files = list_files_in_directory(path).unwrap();
+    let files = get_valid_gps_files(path).unwrap();
     for filename in files {
         if processed_files.contains(&filename) {
             continue;
         }
-        if let Ok(track_information) = get_track_information(path.join(&filename).as_path()) {
+        if let Ok((track_information, coordinates)) =
+            get_track_information(path.join(&filename).as_path())
+        {
             insert_file(&mut conn, &filename, track_information).unwrap();
-        }else{
+            save_cached_coordinates(cache_path, &filename, coordinates).unwrap();
+        } else {
             eprintln!("No track information found for {}", filename);
+            // TODO: Insert in the database something with a flag of empty track
         }
     }
 

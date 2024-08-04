@@ -7,36 +7,30 @@ use std::{
 use crate::model::{coordinate::Coordinate, track::TrackInformation};
 use quick_xml::{events::Event, reader::Reader};
 
-pub fn read_file_coordinates(path: &Path) -> Result<Vec<Coordinate>> {
-    println!("Reading file: {}", path.display());
-    read_gpx_file_coordinates(&path.to_path_buf())
-}
-
-pub fn get_track_information(path: &Path) -> Result<TrackInformation> {
+pub fn get_track_information(path: &Path) -> Result<(TrackInformation, Vec<Coordinate>)> {
     println!("Extracting track information of file: {}", path.display());
-    let coordinates = read_gpx_file_coordinates(&path.to_path_buf());
+    let coordinates = read_gpx_file_coordinates(&path.to_path_buf())?;
 
     let mut north_west_longitude: f32 = std::f32::NAN;
     let mut north_west_latitude: f32 = std::f32::NAN;
     let mut south_east_longitude: f32 = std::f32::NAN;
     let mut south_east_latitude: f32 = std::f32::NAN;
-    if let Ok(coordinates) = coordinates {
-        for coordinate in coordinates {
-            if north_west_longitude.is_nan() || coordinate.longitude > north_west_longitude {
-                north_west_longitude = coordinate.longitude;
-            }
 
-            if north_west_latitude.is_nan() || coordinate.longitude > north_west_latitude {
-                north_west_latitude = coordinate.latitude;
-            }
+    for coordinate in &coordinates {
+        if north_west_longitude.is_nan() || coordinate.longitude > north_west_longitude {
+            north_west_longitude = coordinate.longitude;
+        }
 
-            if south_east_longitude.is_nan() || coordinate.longitude < south_east_longitude {
-                south_east_longitude = coordinate.longitude;
-            }
+        if north_west_latitude.is_nan() || coordinate.longitude > north_west_latitude {
+            north_west_latitude = coordinate.latitude;
+        }
 
-            if south_east_latitude.is_nan() || coordinate.longitude < south_east_latitude {
-                south_east_latitude = coordinate.latitude;
-            }
+        if south_east_longitude.is_nan() || coordinate.longitude < south_east_longitude {
+            south_east_longitude = coordinate.longitude;
+        }
+
+        if south_east_latitude.is_nan() || coordinate.longitude < south_east_latitude {
+            south_east_latitude = coordinate.latitude;
         }
     }
 
@@ -51,12 +45,15 @@ pub fn get_track_information(path: &Path) -> Result<TrackInformation> {
         ));
     }
 
-    Ok(TrackInformation {
-        north_west_longitude,
-        north_west_latitude,
-        south_east_longitude,
-        south_east_latitude,
-    })
+    Ok((
+        TrackInformation {
+            north_west_longitude,
+            north_west_latitude,
+            south_east_longitude,
+            south_east_latitude,
+        },
+        coordinates,
+    ))
 }
 
 /// .
