@@ -19,37 +19,11 @@ export class TrackService {
 
   constructor(private httpClient: HttpClient) { }
 
-  private _createTrack(map: L.Map, url: string): void {
-    new L.GPX(url, {
-      async: true,
-      marker_options: {
-        startIcon: undefined,
-        endIcon: undefined,
-        shadowUrl: undefined,
-        endIconUrl: undefined,
-        startIconUrl: undefined
-      },
-      polyline_options: {
-        color: 'blue',
-        opacity: 0.75,
-        smoothFactor: 3
-      }
-    }).on('loaded', function (e: any) {
-      // Consider if focusing makes sense
-      // map.fitBounds(e.target.getBounds());
-    }).addTo(map);
-  }
-
   private _createPolylineTrack(map: L.Map, coordinates: L.LatLng[]) {
-
     L.polyline(coordinates, { color: 'blue', opacity: 0.75, smoothFactor: 3 }).addTo(map);
   }
 
-
   createSingleTrack(map: L.Map, filename: string): void {
-    // let file = `${this.backendServer}/${this.tracksPath}/1389563275.gpx`;
-    // this._createTrack(map, file);
-    // let filename = '1389563275.gpx';
     let file = `${this.backendServer}/${this.coordinatesPath}/${filename}`;
     this.httpClient.get<Coordinate[]>(file).subscribe((rawCoordinates: Coordinate[]) => {
       const coordinates = rawCoordinates.map<L.LatLng>(coordinate => new L.LatLng(coordinate.a, coordinate.o));
@@ -66,21 +40,6 @@ export class TrackService {
       });
     });
   }
-
-  //   .get("northWestLongitude")
-  //   .and_then(|v| v.parse::<f32>().ok())
-  //   .unwrap_or_default();
-  // let north_west_latitude = params
-  //   .get("northWestLatitude")
-  //   .and_then(|v| v.parse::<f32>().ok())
-  //   .unwrap_or_default();
-  // let south_east_longitude = params
-  //   .get("southEastLongitude")
-  //   .and_then(|v| v.parse::<f32>().ok())
-  //   .unwrap_or_default();
-  // let south_east_latitude = params
-  //   .get("southEastLatitude")
-
 
   createTracksInsideSquare(map: L.Map, northEastCoordinate: L.LatLng, southWestCoordinate: L.LatLng): void {
     const params = `northWestLatitude=${northEastCoordinate.lat}&northWestLongitude=${southWestCoordinate.lng}&` +

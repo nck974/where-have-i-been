@@ -1,21 +1,19 @@
-use std::path::Path as FilePath;
-
 use rusqlite::{named_params, params, Connection, Result};
 
-use crate::{
-    model::track::TrackInformation,
-    utils::{file_utils::list_files_in_directory, gpx_utils::get_track_information},
-};
-
-// TODO: Move this to a settings file
-const BASE_PATH: &str =
-    "C:\\Users\\nck\\Development\\where-have-i-been\\wherehaveibeen-ng\\data\\track-complete\\";
+use crate::model::track::TrackInformation;
 
 const DATABASE_NAME: &str = "tracks_database.db";
 
-pub fn initialize_database() {
-    let mut conn = Connection::open(DATABASE_NAME).unwrap();
+pub fn get_database_connection() -> Result<Connection> {
+    Connection::open(DATABASE_NAME)
+}
 
+/// .Creates the sqlite database if it does not already exist
+///
+/// # Errors
+///
+/// This function will return an error if the database can not be created.
+pub fn initialize_database(conn: &mut Connection) -> Result<(), rusqlite::Error> {
     conn.execute(
         "CREATE TABLE IF NOT EXISTS tracks (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -27,30 +25,13 @@ pub fn initialize_database() {
             date DATE
         );
     )",
-        (), // empty list of parameters.
-    )
-    .unwrap();
+        (), // no params
+    )?;
 
-    insert_new_data_to_database(&mut conn);
-
-    conn.close().unwrap();
+    Ok(())
 }
 
-fn insert_new_data_to_database(conn: &mut Connection) {
-    let processed_files = read_files_in_database(conn);
-    let path = FilePath::new(BASE_PATH);
-    let files = list_files_in_directory(path).unwrap();
-    for filename in files {
-        if processed_files.contains(&filename) {
-            continue;
-        }
-        if let Ok(track_information) = get_track_information(path.join(&filename).as_path()) {
-            insert_file(conn, &filename, track_information).unwrap();
-        }
-    }
-}
-
-fn read_files_in_database(conn: &mut Connection) -> Vec<String> {
+pub fn read_files_in_database(conn: &mut Connection) -> Vec<String> {
     let mut select_statement = conn.prepare("SELECT filename FROM tracks;").unwrap();
     let rows = select_statement
         .query_map([], |row| Ok(row.get::<_, String>(0)?))
@@ -71,7 +52,7 @@ pub fn insert_file(
     conn: &mut Connection,
     filename: &str,
     track_information: TrackInformation,
-) -> Result<()> {
+) -> Result<(), rusqlite::Error> {
     dbg!(&track_information);
     conn.execute(
         "INSERT INTO 
@@ -145,7 +126,7 @@ WHERE
 		t.southeastlongitude >= :providednorthwestlongitude AND t.southeastlongitude  <= :providedsoutheastlongitude
 	)
 ;"
-    ).unwrap();
+    )?;
 
     let filenames = stmt
         .query_map(
@@ -171,10 +152,6 @@ WHERE
         }
     }
     dbg!(&files);
-
-    for file in &files {
-        println!("{:?}", file);
-    }
 
     Ok(files)
 }
