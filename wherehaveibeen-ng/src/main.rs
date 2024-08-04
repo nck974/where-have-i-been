@@ -13,14 +13,10 @@ use database::tracks_database::{
 use model::track::TrackInformation;
 use utils::{
     cache_utils::save_cached_coordinates,
+    environment::{get_cache_directory, get_tracks_directory},
     file_utils::{create_folder, get_valid_gps_files},
     gpx_utils::get_track_information,
 };
-
-// TODO: Move this to a settings file
-const BASE_PATH: &str =
-    "C:\\Users\\nck\\Development\\where-have-i-been\\wherehaveibeen-ng\\data\\track-complete\\";
-const CACHE_FOLDER: &str = ".//.cached_tracks";
 
 fn initialize_data() {
     let mut conn = get_database_connection().unwrap();
@@ -32,10 +28,12 @@ fn initialize_data() {
     let processed_files = read_files_in_database(&mut conn);
 
     // Create the folder where the simplified gpx tracks will be stored
-    let cache_path = Path::new(CACHE_FOLDER);
+    let cache_directory = get_cache_directory();
+    let cache_path = Path::new(&cache_directory);
     create_folder(&cache_path).unwrap();
 
-    let path = Path::new(BASE_PATH);
+    let tracks_directory = get_tracks_directory();
+    let path = Path::new(&tracks_directory);
     let files = get_valid_gps_files(path).unwrap();
     for filename in files {
         if processed_files.contains(&filename) {

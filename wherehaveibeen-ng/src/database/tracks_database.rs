@@ -1,11 +1,9 @@
 use rusqlite::{named_params, params, Connection, Result};
 
-use crate::model::track::TrackInformation;
-
-const DATABASE_NAME: &str = "tracks_database.db";
+use crate::{model::track::TrackInformation, utils::environment::get_database_path};
 
 pub fn get_database_connection() -> Result<Connection> {
-    Connection::open(DATABASE_NAME)
+    Connection::open(get_database_path())
 }
 
 /// .Creates the sqlite database if it does not already exist
@@ -81,7 +79,7 @@ pub fn insert_file(
 }
 
 pub fn get_tracks_inside_location(track_information: TrackInformation) -> Result<Vec<String>> {
-    let conn = Connection::open(DATABASE_NAME).unwrap();
+    let conn = Connection::open(get_database_path()).unwrap();
 
     let mut stmt  = conn.prepare(
         "SELECT 
