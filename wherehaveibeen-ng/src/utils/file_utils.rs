@@ -29,7 +29,7 @@ pub fn read_file(path: &Path) -> Result<String, Error> {
     fs::read_to_string(path)
 }
 
-pub fn create_folder(path: &Path) -> Result<(), Error>{
+pub fn create_folder(path: &Path) -> Result<(), Error> {
     fs::create_dir_all(path)
 }
 
@@ -37,4 +37,3 @@ pub fn save_to_file(path: &Path, content: &str) -> Result<(), Error> {
     println!("Writing to file: {}", path.display());
     fs::write(path, content)
 }
-

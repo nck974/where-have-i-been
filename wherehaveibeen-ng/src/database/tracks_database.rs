@@ -53,7 +53,6 @@ pub fn insert_file(
     track_information: TrackInformation,
     is_empty_track: bool,
 ) -> Result<(), rusqlite::Error> {
-    dbg!(&track_information);
     conn.execute(
         "INSERT INTO 
             tracks (

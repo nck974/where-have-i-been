@@ -1,3 +1,5 @@
+use super::trackpoint::TrackPoint;
+
 #[derive(Debug)]
 
 pub struct TrackInformation {
@@ -19,6 +21,19 @@ impl TrackInformation {
             north_west_longitude,
             south_east_latitude,
             south_east_longitude,
+        }
+    }
+}
+
+pub struct TrackFile {
+    pub track_points: Vec<TrackPoint>,
+    pub activity_type: String,
+}
+impl TrackFile {
+    pub fn new(track_points: Vec<TrackPoint>, activity_type: String) -> Self {
+        TrackFile {
+            track_points,
+            activity_type,
         }
     }
 }

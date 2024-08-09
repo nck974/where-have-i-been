@@ -1,24 +1,28 @@
 mod database;
+mod files;
 mod handlers;
 mod model;
 mod routes;
 mod utils;
 
 use std::path::Path;
+use std::time::Instant;
 
 use axum::Router;
 use database::tracks_database::{
     get_database_connection, initialize_database, insert_file, read_files_in_database,
 };
+use files::files::get_track_information;
 use model::track::TrackInformation;
 use utils::{
     cache_utils::save_cached_coordinates,
     environment::{get_cache_directory, get_tracks_directory},
     file_utils::{create_folder, get_valid_gps_files},
-    gpx_utils::get_track_information,
 };
 
 fn initialize_data() {
+    let start = Instant::now();
+
     let mut conn = get_database_connection().unwrap();
 
     initialize_database(&mut conn).unwrap();
@@ -36,16 +40,20 @@ fn initialize_data() {
     let path = Path::new(&tracks_directory);
     let files = get_valid_gps_files(path).unwrap();
     for filename in files {
+        // Do not reprocess data already stored in the database for performance
+        // on the second startup
         if processed_files.contains(&filename) {
             continue;
         }
-        if let Ok((track_information, coordinates)) =
-            get_track_information(path.join(&filename).as_path())
-        {
+        let file_path = path.join(&filename);
+
+        let track = get_track_information(file_path.as_path());
+        if let Ok((track_information, coordinates)) = track {
             insert_file(&mut conn, &filename, track_information, false).unwrap();
             save_cached_coordinates(cache_path, &filename, coordinates).unwrap();
-        } else {
+        } else if let Err(e) = track  {
             eprintln!("No track information found for {}", filename);
+            eprintln!("Error: {}", e);
             insert_file(
                 &mut conn,
                 &filename,
@@ -58,6 +66,8 @@ fn initialize_data() {
 
     // Release connection
     conn.close().unwrap();
+
+    println!("Initialization took: {:?}", start.elapsed());
 }
 
 #[tokio::main]
