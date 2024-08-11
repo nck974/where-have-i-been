@@ -1,7 +1,24 @@
 <div class="map-container">
+    
+    <!-- Loading progress -->
+    @if(isLoadingTracks){
+    <div class="loading-tracks">
+        <span>
+            Downloading tracks...
+        </span>
+        @if(tracksToDownload()>0){
+        <span>
+            {{downloadedTracks()}}/{{tracksToDownload()}}
+        </span>
+        }
+    </div>
+    }
+    <!-- Map -->
     <div class="map-frame">
         <div id="map"></div>
     </div>
+
+    <!-- Actions -->
     <button (click)="showTracksForCurrentScreen()">Show tracks</button>
     <button (click)="clearTracks()">Clear tracks</button>
 </div>
