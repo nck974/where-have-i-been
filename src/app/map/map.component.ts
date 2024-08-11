@@ -3,11 +3,16 @@ import * as L from 'leaflet';
 import { TrackService } from '../track.service';
 import { Coordinate } from '../model/coordinate';
 import { FileList } from '../model/files';
+import { MatIconModule } from '@angular/material/icon';
+import { MatButtonModule } from '@angular/material/button';
+import { MatTooltip } from '@angular/material/tooltip';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatChipsModule } from '@angular/material/chips';
 
 @Component({
   selector: 'app-map',
   standalone: true,
-  imports: [],
+  imports: [MatButtonModule, MatIconModule, MatTooltip, MatProgressSpinnerModule, MatChipsModule],
   templateUrl: './map.component.html',
   styleUrl: './map.component.scss'
 })
@@ -15,7 +20,7 @@ export class MapComponent implements AfterViewInit {
 
   private map!: L.Map;
   private static defaultLocation: L.LatLng = new L.LatLng(49.4521, 11.0767);
-  private displayedTracks: L.Polyline[] = []
+  displayedTracks: L.Polyline[] = []
   tracksToDownload: WritableSignal<number> = signal(0);
   downloadedTracks: WritableSignal<number> = signal(0);
   isLoadingTracks = false;
@@ -61,7 +66,7 @@ export class MapComponent implements AfterViewInit {
       if (this.downloadedTracks() == this.tracksToDownload()) {
         this.isLoadingTracks = false;
         this.downloadedTracks.set(0);
-        this.downloadedTracks.set(0);
+        this.tracksToDownload.set(0);
       }
     });
   }
@@ -82,8 +87,9 @@ export class MapComponent implements AfterViewInit {
     this.isLoadingTracks = true;
     this.trackService.getTracksInsideSquare(northEast, southWest).subscribe((file: FileList) => {
 
-      if (this.tracksToDownload() > 0) {
-        this.tracksToDownload.set(file.fileList.length);
+      const numberFilesFound = file.fileList.length;
+      if (numberFilesFound > 0) {
+        this.tracksToDownload.set(numberFilesFound);
         this.downloadedTracks.set(0);
         file.fileList.forEach(filename => this.displayTrack(filename));
       } else {
@@ -96,10 +102,10 @@ export class MapComponent implements AfterViewInit {
   /// Remove all tracks displayed. This is useful when you want to check a new zone and what is
   /// already displayed would take too much memory
   clearTracks(): void {
-    console.log(this.displayedTracks);
     this.displayedTracks.forEach((track) => {
       this.map.removeLayer(track);
     })
+    this.displayedTracks.splice(0, this.displayedTracks.length);
   }
 
 }

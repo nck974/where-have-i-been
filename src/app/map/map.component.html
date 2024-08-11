@@ -1,14 +1,16 @@
 <div class="map-container">
-    
+
     <!-- Loading progress -->
     @if(isLoadingTracks){
-    <div class="loading-tracks">
-        <span>
-            Downloading tracks...
-        </span>
+    <div class="loading-container">
+        <mat-progress-spinner mode="indeterminate"
+            diameter="30"></mat-progress-spinner>
         @if(tracksToDownload()>0){
-        <span>
-            {{downloadedTracks()}}/{{tracksToDownload()}}
+        <span
+            class="loading-item">
+            <mat-chip disabled="true">
+                {{downloadedTracks()}}/{{tracksToDownload()}}
+            </mat-chip>
         </span>
         }
     </div>
@@ -19,6 +21,15 @@
     </div>
 
     <!-- Actions -->
-    <button (click)="showTracksForCurrentScreen()">Show tracks</button>
-    <button (click)="clearTracks()">Clear tracks</button>
+    <div class="actions-container">
+        <button mat-flat-button (click)="showTracksForCurrentScreen()"
+            matTooltip="Show all tracks that have a point in the displayed area">Show
+            tracks</button>
+        <button mat-raised-button
+            [disabled]="displayedTracks.length == 0"
+            [disabledInteractive]="displayedTracks.length == 0"
+            matTooltip="Remove the displayed tracks from the map"
+            color="secondary"
+            (click)="clearTracks()">Clear tracks</button>
+    </div>
 </div>

@@ -16,7 +16,7 @@
     height: 100%;
 }
 
-.loading-tracks {
+.loading-container {
     position: absolute;
     top: 10%;
     left: 50%;
@@ -25,7 +25,22 @@
     display: flex;
     justify-content: center;
     align-items: center;
-    padding: 10px;
+    padding: 1rem;
     width: auto;
     height: auto;
+}
+
+.loading-item{
+    padding: 0.5rem;
+}
+
+.actions-container {
+    position: absolute;
+    bottom: 0%;
+    z-index: 1000;
+    padding: 1rem;
+}
+
+.actions-container > button{
+    margin-right: 0.5rem;
 }
