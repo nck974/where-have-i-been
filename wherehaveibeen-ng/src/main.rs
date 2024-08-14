@@ -5,27 +5,62 @@ mod model;
 mod routes;
 mod utils;
 
+use std::collections::HashMap;
 use std::path::Path;
 use std::time::Instant;
 
 use axum::Router;
+use database::heatmap::{initialize_heatmap_table, update_heatmap};
 use database::tracks_database::{
-    get_database_connection, initialize_database, insert_file, read_files_in_database,
+    get_database_connection, initialize_tracks_table, insert_file, read_files_in_database,
 };
 use files::files::get_track_information;
+use model::coordinate::{Coordinate, StringifiedCoordinate};
 use model::track::TrackInformation;
+use rusqlite::Connection;
 use utils::{
     cache_utils::save_cached_coordinates,
     environment::{get_cache_directory, get_tracks_directory},
     file_utils::{create_folder, get_valid_gps_files},
 };
 
+fn add_coordinates_to_heatmap(
+    heatmap: &mut HashMap<StringifiedCoordinate, i32>,
+    coordinates: &Vec<Coordinate>,
+) {
+    // First reduce the number of points that need to be inserted in the database by counting what
+    // is already in memory
+    for coordinate in coordinates {
+        // Round the coordinate to minimize points (Lose approx 11m of precision), Usually it would
+        // have 6 decimals but is now reduced to 5.
+        let number_of_decimals: usize = 5;
+        let rounded_coordinate = StringifiedCoordinate::new(
+            format!("{:.1$}", coordinate.latitude, number_of_decimals),
+            format!("{:.1$}", coordinate.longitude, number_of_decimals),
+        );
+        *heatmap.entry(rounded_coordinate).or_insert(0) += 1;
+    }
+}
+
+fn save_heatmap(
+    conn: &mut Connection,
+    heatmap: &mut HashMap<StringifiedCoordinate, i32>,
+) -> Result<(), rusqlite::Error> {
+    println!("Saving heatmap...");
+    for (coordinate, frequency) in heatmap.into_iter() {
+        update_heatmap(conn, coordinate, frequency)?;
+    }
+
+    Ok(())
+}
+
 fn initialize_data() {
     let start = Instant::now();
 
     let mut conn = get_database_connection().unwrap();
 
-    initialize_database(&mut conn).unwrap();
+    initialize_tracks_table(&mut conn).unwrap();
+    initialize_heatmap_table(&mut conn).unwrap();
 
     // Get what is already stored in the database to avoid processing again the same files
     // that have already been processed
@@ -39,6 +74,7 @@ fn initialize_data() {
     let tracks_directory = get_tracks_directory();
     let path = Path::new(&tracks_directory);
     let files = get_valid_gps_files(path).unwrap();
+    let mut heatmap: HashMap<StringifiedCoordinate, i32> = HashMap::new();
     for filename in files {
         // Do not reprocess data already stored in the database for performance
         // on the second startup
@@ -50,8 +86,9 @@ fn initialize_data() {
         let track = get_track_information(file_path.as_path());
         if let Ok((track_information, coordinates)) = track {
             insert_file(&mut conn, &filename, track_information, false).unwrap();
-            save_cached_coordinates(cache_path, &filename, coordinates).unwrap();
-        } else if let Err(e) = track  {
+            save_cached_coordinates(cache_path, &filename, &coordinates).unwrap();
+            add_coordinates_to_heatmap(&mut heatmap, &coordinates);
+        } else if let Err(e) = track {
             eprintln!("No track information found for {}", filename);
             eprintln!("Error: {}", e);
             insert_file(
@@ -64,6 +101,8 @@ fn initialize_data() {
         }
     }
 
+    save_heatmap(&mut conn, &mut heatmap).unwrap();
+
     // Release connection
     conn.close().unwrap();
 
@@ -74,7 +113,9 @@ fn initialize_data() {
 async fn main() {
     initialize_data();
 
-    let app = Router::new().nest("/tracks", routes::tracks::router());
+    let app = Router::new()
+        .nest("/tracks", routes::tracks::router())
+        .nest("/heatmap", routes::heatmap::router());
 
     // run our app with hyper, listening globally on port 3000
     let listener = tokio::net::TcpListener::bind("0.0.0.0:3000").await.unwrap();

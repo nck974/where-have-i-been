@@ -8,13 +8,14 @@
         @if(tracksToDownload()>0){
         <span
             class="loading-item">
-            <mat-chip disabled="true">
+            <mat-chip disabled="false">
                 {{downloadedTracks()}}/{{tracksToDownload()}}
             </mat-chip>
         </span>
         }
     </div>
     }
+
     <!-- Map -->
     <div class="map-frame">
         <div id="map"></div>
@@ -25,11 +26,14 @@
         <button mat-flat-button (click)="showTracksForCurrentScreen()"
             matTooltip="Show all tracks that have a point in the displayed area">Show
             tracks</button>
+        <button mat-flat-button (click)="showHeatmapForCurrentScreen()"
+            matTooltip="Show the heatmap of all tracks">Show
+            heatmap</button>
         <button mat-raised-button
-            [disabled]="displayedTracks.length == 0"
-            [disabledInteractive]="displayedTracks.length == 0"
-            matTooltip="Remove the displayed tracks from the map"
+            [disabled]="displayedTracks.length == 0 && displayedHeatmap.length==0"
+            [disabledInteractive]="displayedTracks.length == 0 && displayedHeatmap.length==0"
+            matTooltip="Remove the displayed information from the map"
             color="secondary"
-            (click)="clearTracks()">Clear tracks</button>
+            (click)="clearMap()">Clear</button>
     </div>
 </div>

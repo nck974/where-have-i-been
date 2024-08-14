@@ -11,7 +11,7 @@ pub fn get_database_connection() -> Result<Connection> {
 /// # Errors
 ///
 /// This function will return an error if the database can not be created.
-pub fn initialize_database(conn: &mut Connection) -> Result<(), rusqlite::Error> {
+pub fn initialize_tracks_table(conn: &mut Connection) -> Result<(), rusqlite::Error> {
     conn.execute(
         "CREATE TABLE IF NOT EXISTS tracks (
             id INTEGER PRIMARY KEY AUTOINCREMENT,

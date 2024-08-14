@@ -7,7 +7,7 @@ use super::file_utils::{read_file, save_to_file};
 pub fn save_cached_coordinates(
     path: &Path,
     filename: &str,
-    coordinates: Vec<Coordinate>,
+    coordinates: &Vec<Coordinate>,
 ) -> Result<(), std::io::Error> {
     let mut content = String::new();
     for coordinate in coordinates {
