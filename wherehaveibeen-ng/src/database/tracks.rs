@@ -83,16 +83,18 @@ pub fn insert_file(
                 north_west_longitude,
                 south_east_latitude,
                 south_east_longitude,
-                is_empty_track
+                is_empty_track,
+                date
             ) 
-        VALUES (?1, ?2, ?3, ?4, ?5, ?6)",
+        VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7)",
         params![
             filename,
             track_information.north_west_latitude,
             track_information.north_west_longitude,
             track_information.south_east_latitude,
             track_information.south_east_longitude,
-            is_empty_track
+            is_empty_track,
+            track_information.date
         ],
     )?;
 

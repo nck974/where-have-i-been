@@ -68,6 +68,7 @@ pub async fn get_filtered_tracks(
         north_west_longitude,
         south_east_latitude,
         south_east_longitude,
+        "".to_string(), // dates are not implemented yet
     );
     dbg!(&track_information);
 

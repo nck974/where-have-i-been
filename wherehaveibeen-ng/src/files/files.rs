@@ -3,6 +3,8 @@ use std::{
     path::Path,
 };
 
+use chrono::DateTime;
+
 use crate::model::{
     coordinate::Coordinate,
     track::{TrackFile, TrackInformation},
@@ -25,8 +27,13 @@ fn extract_track_information(track_file: &TrackFile) -> Result<TrackInformation,
     let mut north_west_latitude: f32 = std::f32::NAN;
     let mut south_east_longitude: f32 = std::f32::NAN;
     let mut south_east_latitude: f32 = std::f32::NAN;
+    let mut date: String = "".to_string();
 
     for coordinate in &track_file.track_points {
+        if date.eq("") {
+            date = coordinate.time.to_string();
+        }
+
         if north_west_longitude.is_nan() || coordinate.longitude > north_west_longitude {
             north_west_longitude = coordinate.longitude;
         }
@@ -44,6 +51,7 @@ fn extract_track_information(track_file: &TrackFile) -> Result<TrackInformation,
         }
     }
 
+    // Check all corners are valid points
     if north_west_longitude.is_nan()
         || north_west_latitude.is_nan()
         || south_east_longitude.is_nan()
@@ -55,12 +63,20 @@ fn extract_track_information(track_file: &TrackFile) -> Result<TrackInformation,
         ));
     }
 
-    Ok(TrackInformation {
+    // Check date format
+    if let Ok(value) = DateTime::parse_from_rfc3339(&date) {
+        date = value.to_rfc3339();
+    } else {
+        return Err(Error::new(ErrorKind::InvalidInput, "Invalid date format"));
+    }
+
+    Ok(TrackInformation::new(
         north_west_longitude,
         north_west_latitude,
         south_east_longitude,
         south_east_latitude,
-    })
+        date,
+    ))
 }
 
 pub fn get_track_information(file: &Path) -> Result<(TrackInformation, Vec<Coordinate>), Error> {
@@ -68,7 +84,7 @@ pub fn get_track_information(file: &Path) -> Result<(TrackInformation, Vec<Coord
     if file.extension().unwrap() == "gpx" {
         track_file = read_gpx(file)?;
     } else {
-        eprintln!("Invalid format {}",file.display());
+        eprintln!("Invalid format {}", file.display());
         return Err(Error::new(
             std::io::ErrorKind::InvalidData,
             "Invalid format",

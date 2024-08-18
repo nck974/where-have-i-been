@@ -83,7 +83,7 @@ fn initialize_data() {
             insert_file(
                 &mut conn,
                 &filename,
-                TrackInformation::new(0.0, 0.0, 0.0, 0.0),
+                TrackInformation::create_empty_track(),
                 true,
             )
             .unwrap();

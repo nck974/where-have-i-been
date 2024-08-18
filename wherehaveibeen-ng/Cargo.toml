@@ -7,6 +7,7 @@ edition = "2021"
 
 [dependencies]
 axum = "0.7.5"
+chrono = "0.4.38"
 quick-xml = { version = "0.36.1", features = ["serde", "serialize"] }
 rusqlite = { version = "0.32.1", features = ["bundled"] }
 serde = { version = "1.0.204", features = ["derive"] }

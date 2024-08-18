@@ -34,6 +34,7 @@ pub async fn get_filtered_heatmap(
         north_west_longitude,
         south_east_latitude,
         south_east_longitude,
+        "".to_string()
     );
 
     match get_heatmap_inside_location(track_information) {
