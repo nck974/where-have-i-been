@@ -63,7 +63,7 @@ export class MapComponent implements AfterViewInit {
   }
 
   private addHeatmapToMap(heatmapData: L.HeatLatLngTuple[]) {
-    var heatmap = L.heatLayer(heatmapData, { radius: 10, max: 200, gradient: { 0.1: 'yellow', 0.4: 'orange', 0.6: 'red', 0.8: 'white' }, minOpacity: 0.8 });
+    let heatmap = L.heatLayer(heatmapData, { radius: 10, max: 200, gradient: { 0.1: 'yellow', 0.4: 'orange', 0.6: 'red', 0.8: 'white' }, minOpacity: 0.8 });
     heatmap.addTo(this.map);
     this.displayedHeatmap.push(heatmap);
 

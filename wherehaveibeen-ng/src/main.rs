@@ -7,6 +7,7 @@ mod utils;
 
 use std::collections::HashMap;
 use std::path::Path;
+use std::process::exit;
 use std::time::Instant;
 
 use axum::Router;
@@ -17,7 +18,6 @@ use database::tracks_database::{
 use files::files::get_track_information;
 use model::coordinate::{Coordinate, StringifiedCoordinate};
 use model::track::TrackInformation;
-use rusqlite::Connection;
 use utils::{
     cache_utils::save_cached_coordinates,
     environment::{get_cache_directory, get_tracks_directory},
@@ -40,18 +40,6 @@ fn add_coordinates_to_heatmap(
         );
         *heatmap.entry(rounded_coordinate).or_insert(0) += 1;
     }
-}
-
-fn save_heatmap(
-    conn: &mut Connection,
-    heatmap: &mut HashMap<StringifiedCoordinate, i32>,
-) -> Result<(), rusqlite::Error> {
-    println!("Saving heatmap...");
-    for (coordinate, frequency) in heatmap.into_iter() {
-        update_heatmap(conn, coordinate, frequency)?;
-    }
-
-    Ok(())
 }
 
 fn initialize_data() {
@@ -101,7 +89,11 @@ fn initialize_data() {
         }
     }
 
-    save_heatmap(&mut conn, &mut heatmap).unwrap();
+    println!("Saving heatmap...");
+    if let Err(err) = update_heatmap(&mut conn, &mut heatmap){
+        eprintln!("Error saving heatmap in the database: {}", err);
+        exit(1)
+    }
 
     // Release connection
     conn.close().unwrap();

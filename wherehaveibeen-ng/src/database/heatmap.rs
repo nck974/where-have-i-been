@@ -1,4 +1,6 @@
-use rusqlite::{named_params, params, Connection, Result};
+use std::collections::HashMap;
+
+use rusqlite::{named_params, params, params_from_iter, Connection, Result};
 
 use crate::{
     model::{
@@ -15,10 +17,10 @@ use crate::{
 pub fn initialize_heatmap_table(conn: &mut Connection) -> Result<(), rusqlite::Error> {
     conn.execute(
         "CREATE TABLE IF NOT EXISTS heatmap (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
             latitude REAL NOT NULL,
             longitude REAL NOT NULL,
-            frequency INTEGER NOT NULL
+            frequency INTEGER NOT NULL,
+            PRIMARY KEY (latitude, longitude)
         );
     )",
         (), // no params
@@ -27,36 +29,114 @@ pub fn initialize_heatmap_table(conn: &mut Connection) -> Result<(), rusqlite::E
     Ok(())
 }
 
-pub fn update_heatmap(
-    conn: &Connection,
-    coordinate: &StringifiedCoordinate,
-    frequency: &i32,
-) -> Result<(), rusqlite::Error> {
-    let mut stmt =
-        conn.prepare("SELECT frequency FROM heatmap WHERE latitude = ?1 AND longitude = ?2;")?;
-    let result: Result<i32> = stmt
-        .query_row(params![coordinate.latitude, coordinate.longitude], |row| {
-            row.get(0)
-        });
+fn is_heatmap_table_empty(conn: &Connection) -> Result<bool, rusqlite::Error> {
+    let count: i32 = conn.query_row("SELECT COUNT(*) FROM heatmap;", [], |row| row.get(0))?;
+    if count > 0 {
+        println!("The database is not empty. Updates will be slower...");
+    }
+    Ok(count == 0)
+}
 
-    match result {
-        Ok(current_frequency) => {
-            let new_frequency = current_frequency + frequency;
-            conn.execute(
-                "UPDATE heatmap SET frequency = ?1 WHERE latitude = ?2 AND longitude = ?3;",
-                params![new_frequency, coordinate.latitude, coordinate.longitude],
-            )?;
+fn insert_data_in_empty_database(
+    conn: &mut Connection,
+    heatmap: &mut HashMap<StringifiedCoordinate, i32>,
+) -> Result<(), rusqlite::Error> {
+    if heatmap.len() == 0 {
+        return Ok(());
+    }
+
+    let transaction_size = 100; // How many queries before a commit
+    let chunk_size = 1000; // How many rows per query
+
+    let mut query = String::new();
+    let mut params = Vec::new();
+
+    let mut counter = 0;
+    let mut transaction_counter = 0;
+    let mut tx = conn.transaction()?;
+    println!("Saving heatmap into the database...");
+    for (coordinate, frequency) in heatmap.into_iter() {
+        // Start a new query if this is the first in the chunk
+        if counter % chunk_size == 0 {
+            if !query.is_empty() {
+                query.pop(); // Remove the trailing comma
+                tx.execute(&query, params_from_iter(params.iter()))?;
+                params.clear();
+                transaction_counter += 1;
+                // Commit all buffered transactions
+                if transaction_counter % transaction_size == 0 {
+                    tx.commit()?;
+                    tx = conn.transaction()?;
+                }
+            }
+
+            // Start a new query
+            query = String::from("INSERT INTO heatmap (frequency, latitude, longitude) VALUES ");
         }
-        Err(rusqlite::Error::QueryReturnedNoRows) => {
-            conn.execute(
-                "INSERT INTO heatmap (frequency, latitude, longitude) VALUES (?1, ?2, ?3)",
-                params![frequency, coordinate.latitude, coordinate.longitude],
-            )?;
+
+        // Add placeholders to the query
+        query.push_str("(?, ?, ?),");
+
+        // Push values into the params vector
+        params.push(frequency.to_string());
+        params.push(coordinate.latitude.to_string());
+        params.push(coordinate.longitude.to_string());
+
+        counter += 1;
+    }
+
+    // Execute any remaining query if there are leftover rows
+    if !query.is_empty() {
+        query.pop(); // Remove trailing comma
+        tx.execute(&query, params_from_iter(params.iter()))?;
+    }
+    tx.commit()?;
+
+    Ok(())
+}
+
+fn update_data_in_database(
+    conn: &mut Connection,
+    heatmap: &mut HashMap<StringifiedCoordinate, i32>,
+) -> Result<(), rusqlite::Error> {
+    if heatmap.len() == 0 {
+        return Ok(());
+    }
+
+    let transaction_size = 1000;
+    let mut tx = conn.transaction()?;
+    let mut counter = 0;
+    for (coordinate, frequency) in heatmap.into_iter() {
+        if (counter % transaction_size) == (transaction_size - 1) {
+            tx.commit()?;
+            tx = conn.transaction()?;
         }
-        Err(e) => {
-            eprintln!("An error occurred inserting data in the database: {}", e);
-            return Err(e);
-        }
+        tx.execute(
+            "INSERT INTO heatmap (latitude, longitude, frequency)
+         VALUES (?1, ?2, ?3)
+         ON CONFLICT(latitude, longitude) 
+         DO UPDATE SET frequency = frequency + excluded.frequency;",
+            params![
+                coordinate.latitude.to_string(),
+                coordinate.longitude.to_string(),
+                frequency.to_string()
+            ],
+        )?;
+        counter += 1;
+    }
+    tx.commit()?;
+
+    Ok(())
+}
+
+pub fn update_heatmap(
+    conn: &mut Connection,
+    heatmap: &mut HashMap<StringifiedCoordinate, i32>,
+) -> Result<(), rusqlite::Error> {
+    if is_heatmap_table_empty(conn)? {
+        insert_data_in_empty_database(conn, heatmap)?;
+    } else {
+        update_data_in_database(conn, heatmap)?;
     }
 
     Ok(())
