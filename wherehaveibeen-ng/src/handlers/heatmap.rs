@@ -34,7 +34,8 @@ pub async fn get_filtered_heatmap(
         north_west_longitude,
         south_east_latitude,
         south_east_longitude,
-        "".to_string()
+        "".to_string(), // date is not implemented yet
+        "".to_string(), // activity type is not implemented yet
     );
 
     match get_heatmap_inside_location(track_information) {

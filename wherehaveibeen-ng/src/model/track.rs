@@ -8,6 +8,7 @@ pub struct TrackInformation {
     pub south_east_latitude: f32,
     pub south_east_longitude: f32,
     pub date: String,
+    pub activity_type: String,
 }
 
 impl TrackInformation {
@@ -17,6 +18,7 @@ impl TrackInformation {
         south_east_latitude: f32,
         south_east_longitude: f32,
         date: String,
+        activity_type: String,
     ) -> Self {
         TrackInformation {
             north_west_latitude,
@@ -24,6 +26,7 @@ impl TrackInformation {
             south_east_latitude,
             south_east_longitude,
             date,
+            activity_type,
         }
     }
 
@@ -34,6 +37,7 @@ impl TrackInformation {
             south_east_latitude: 0.0,
             south_east_longitude: 0.0,
             date: "".to_string(),
+            activity_type: "".to_string(),
         }
     }
 }

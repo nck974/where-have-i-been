@@ -28,6 +28,7 @@ fn extract_track_information(track_file: &TrackFile) -> Result<TrackInformation,
     let mut south_east_longitude: f32 = std::f32::NAN;
     let mut south_east_latitude: f32 = std::f32::NAN;
     let mut date: String = "".to_string();
+    let activity_type = track_file.activity_type.to_string();
 
     for coordinate in &track_file.track_points {
         if date.eq("") {
@@ -76,6 +77,7 @@ fn extract_track_information(track_file: &TrackFile) -> Result<TrackInformation,
         south_east_longitude,
         south_east_latitude,
         date,
+        activity_type,
     ))
 }
 

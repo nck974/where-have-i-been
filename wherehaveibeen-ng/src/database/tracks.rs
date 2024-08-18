@@ -21,7 +21,8 @@ pub fn initialize_tracks_table(conn: &mut Connection) -> Result<(), rusqlite::Er
             south_east_latitude REAL NOT NULL,
             south_east_longitude REAL NOT NULL,
             date DATE,
-            is_empty_track INTEGER NOT NULL
+            is_empty_track INTEGER NOT NULL,
+            activity_type TEXT NOT NULL
         );
     )",
         (), // no params
@@ -84,9 +85,10 @@ pub fn insert_file(
                 south_east_latitude,
                 south_east_longitude,
                 is_empty_track,
-                date
+                date,
+                activity_type
             ) 
-        VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7)",
+        VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8)",
         params![
             filename,
             track_information.north_west_latitude,
@@ -94,7 +96,8 @@ pub fn insert_file(
             track_information.south_east_latitude,
             track_information.south_east_longitude,
             is_empty_track,
-            track_information.date
+            track_information.date,
+            track_information.activity_type
         ],
     )?;
 
