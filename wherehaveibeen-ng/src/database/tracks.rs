@@ -47,6 +47,28 @@ pub fn read_files_in_database(conn: &mut Connection) -> Vec<String> {
     files
 }
 
+pub fn create_tracks_index(conn: &mut Connection) -> Result<(), rusqlite::Error> {
+    let index_queries = vec![
+        "CREATE INDEX idx_filename ON tracks (filename);",
+        "CREATE INDEX idx_square ON tracks (north_west_latitude, north_west_longitude, south_east_latitude, south_east_longitude);",
+    ];
+
+    for index_query in index_queries {
+        let result = conn.execute(index_query, []);
+
+        match result {
+            Ok(_) => {
+                println!("Index created.");
+            }
+            Err(_) => {
+                println!("Index can not be created.")
+            }
+        }
+    }
+
+    Ok(())
+}
+
 pub fn insert_file(
     conn: &mut Connection,
     filename: &str,

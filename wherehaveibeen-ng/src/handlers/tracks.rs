@@ -8,7 +8,7 @@ use serde_json::json;
 use std::collections::HashMap;
 use std::path::Path as FilePath;
 
-use crate::database::tracks_database::get_tracks_inside_location;
+use crate::database::tracks::get_tracks_inside_location;
 use crate::model::track::TrackInformation;
 use crate::utils::cache_utils::read_cached_coordinates;
 use crate::utils::environment::get_cache_directory;

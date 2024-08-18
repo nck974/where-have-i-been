@@ -142,6 +142,24 @@ pub fn update_heatmap(
     Ok(())
 }
 
+pub fn create_heatmap_index(conn: &mut Connection) -> Result<(), rusqlite::Error> {
+    let result = conn.execute(
+        "CREATE INDEX idx_lat_long ON heatmap (latitude, longitude);",
+        [],
+    );
+
+    match result {
+        Ok(_) => {
+            println!("Index for heatmap table created.");
+        }
+        Err(_) => {
+            println!("Index for heatmap table already exits.")
+        }
+    }
+
+    Ok(())
+}
+
 pub fn get_heatmap_inside_location(
     track_information: TrackInformation,
 ) -> Result<Vec<HeatmapCoordinate>> {

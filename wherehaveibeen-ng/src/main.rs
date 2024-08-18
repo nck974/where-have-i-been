@@ -11,9 +11,10 @@ use std::process::exit;
 use std::time::Instant;
 
 use axum::Router;
-use database::heatmap::{initialize_heatmap_table, update_heatmap};
-use database::tracks_database::{
-    get_database_connection, initialize_tracks_table, insert_file, read_files_in_database,
+use database::heatmap::{create_heatmap_index, initialize_heatmap_table, update_heatmap};
+use database::tracks::{
+    create_tracks_index, get_database_connection, initialize_tracks_table, insert_file,
+    read_files_in_database,
 };
 use files::files::get_track_information;
 use model::coordinate::{Coordinate, StringifiedCoordinate};
@@ -90,10 +91,14 @@ fn initialize_data() {
     }
 
     println!("Saving heatmap...");
-    if let Err(err) = update_heatmap(&mut conn, &mut heatmap){
+    if let Err(err) = update_heatmap(&mut conn, &mut heatmap) {
         eprintln!("Error saving heatmap in the database: {}", err);
         exit(1)
     }
+
+    println!("Creating indexes...");
+    create_heatmap_index(&mut conn).unwrap();
+    create_tracks_index(&mut conn).unwrap();
 
     // Release connection
     conn.close().unwrap();

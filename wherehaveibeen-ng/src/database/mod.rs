@@ -1,2 +1,2 @@
-pub mod tracks_database;
+pub mod tracks;
 pub mod heatmap;
