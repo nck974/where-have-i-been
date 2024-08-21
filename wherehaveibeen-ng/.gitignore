@@ -1,3 +1,6 @@
 target
 tracks_database.db
 .cached_tracks
+data/track-fit
+data/track-complete
+data/track

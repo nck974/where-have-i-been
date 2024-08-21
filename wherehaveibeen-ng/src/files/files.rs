@@ -10,7 +10,7 @@ use crate::model::{
     track::{TrackFile, TrackInformation},
 };
 
-use super::gpx::read_gpx;
+use super::{fit::read_fit, gpx::read_gpx};
 
 fn extract_track_coordinates(track_file: &TrackFile) -> Vec<Coordinate> {
     let mut coordinates: Vec<Coordinate> = Vec::new();
@@ -35,19 +35,19 @@ fn extract_track_information(track_file: &TrackFile) -> Result<TrackInformation,
             date = coordinate.time.to_string();
         }
 
-        if north_west_longitude.is_nan() || coordinate.longitude > north_west_longitude {
-            north_west_longitude = coordinate.longitude;
-        }
-
-        if north_west_latitude.is_nan() || coordinate.longitude > north_west_latitude {
+        if north_west_latitude.is_nan() || coordinate.latitude > north_west_latitude {
             north_west_latitude = coordinate.latitude;
         }
 
-        if south_east_longitude.is_nan() || coordinate.longitude < south_east_longitude {
+        if north_west_longitude.is_nan() || coordinate.longitude < north_west_longitude {
+            north_west_longitude = coordinate.longitude;
+        }
+
+        if south_east_longitude.is_nan() || coordinate.longitude > south_east_longitude {
             south_east_longitude = coordinate.longitude;
         }
 
-        if south_east_latitude.is_nan() || coordinate.longitude < south_east_latitude {
+        if south_east_latitude.is_nan() || coordinate.latitude < south_east_latitude {
             south_east_latitude = coordinate.latitude;
         }
     }
@@ -72,10 +72,10 @@ fn extract_track_information(track_file: &TrackFile) -> Result<TrackInformation,
     }
 
     Ok(TrackInformation::new(
-        north_west_longitude,
         north_west_latitude,
-        south_east_longitude,
+        north_west_longitude,
         south_east_latitude,
+        south_east_longitude,
         date,
         activity_type,
     ))
@@ -85,6 +85,8 @@ pub fn get_track_information(file: &Path) -> Result<(TrackInformation, Vec<Coord
     let track_file: TrackFile;
     if file.extension().unwrap() == "gpx" {
         track_file = read_gpx(file)?;
+    } else if file.extension().unwrap() == "fit" {
+        track_file = read_fit(file)?;
     } else {
         eprintln!("Invalid format {}", file.display());
         return Err(Error::new(

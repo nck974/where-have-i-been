@@ -15,7 +15,7 @@ pub fn get_valid_gps_files(path: &Path) -> Result<Vec<String>, Error> {
     for entry in fs::read_dir(path)? {
         let entry = entry?;
         if let Some(filename) = entry.file_name().to_str() {
-            if filename.ends_with(".gpx") {
+            if filename.ends_with(".gpx") || filename.ends_with(".fit") {
                 file_list.push(filename.to_string());
             }
         }
