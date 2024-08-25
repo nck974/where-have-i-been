@@ -172,9 +172,9 @@ SELECT
 FROM 
 	heatmap h  
 WHERE 
-	h.latitude > :north_west_latitude AND 
-	h.latitude  < :south_east_latitude 
-	AND h.longitude < :north_west_longitude AND h.longitude > :south_east_longitude;",
+	h.latitude < :north_west_latitude AND 
+	h.latitude  > :south_east_latitude 
+	AND h.longitude > :north_west_longitude AND h.longitude < :south_east_longitude;",
     )?;
 
     let row_content = stmt

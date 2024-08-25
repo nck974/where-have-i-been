@@ -17,6 +17,7 @@ use database::tracks::{
     read_files_in_database,
 };
 use files::files::get_track_information;
+use files::gz::decompress_all_gz_files;
 use model::coordinate::{Coordinate, StringifiedCoordinate};
 use model::track::TrackInformation;
 use utils::{
@@ -62,6 +63,10 @@ fn initialize_data() {
 
     let tracks_directory = get_tracks_directory();
     let path = Path::new(&tracks_directory);
+
+    // Sometimes the .fit tracks are stored as .fit.gz
+    decompress_all_gz_files(path).unwrap();
+
     let files = get_valid_gps_files(path).unwrap();
     let mut heatmap: HashMap<StringifiedCoordinate, i32> = HashMap::new();
     for filename in files {

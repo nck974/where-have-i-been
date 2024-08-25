@@ -1,8 +1,6 @@
 import { Injectable } from '@angular/core';
 import L from 'leaflet';
 import { HttpClient } from '@angular/common/http';
-import { Coordinate } from './model/coordinate';
-import { FileList } from './model/files';
 import { Observable } from 'rxjs';
 import { HeatmapCoordinate } from './model/heatmap';
 
@@ -17,8 +15,8 @@ export class HeatmapService {
 
 
   getHeatmapInsideSquare(northEastCoordinate: L.LatLng, southWestCoordinate: L.LatLng): Observable<HeatmapCoordinate[]> {
-    const params = `northWestLatitude=${southWestCoordinate.lat}&northWestLongitude=${northEastCoordinate.lng}&` +
-      `southEastLatitude=${northEastCoordinate.lat}&southEastLongitude=${southWestCoordinate.lng}`;
+    const params = `northWestLatitude=${northEastCoordinate.lat}&northWestLongitude=${southWestCoordinate.lng}&` +
+      `southEastLatitude=${southWestCoordinate.lat}&southEastLongitude=${northEastCoordinate.lng}`;
 
     const url = `${this.backendServer}/${this.heatmapPath}?${params}`;
     return this.httpClient.get<HeatmapCoordinate[]>(url);

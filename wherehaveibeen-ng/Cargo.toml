@@ -9,6 +9,7 @@ edition = "2021"
 axum = "0.7.5"
 chrono = "0.4.38"
 fitparser = "0.7.0"
+flate2 = { version = "1.0.32" }
 quick-xml = { version = "0.36.1", features = ["serde", "serialize"] }
 rusqlite = { version = "0.32.1", features = ["bundled"] }
 serde = { version = "1.0.204", features = ["derive"] }

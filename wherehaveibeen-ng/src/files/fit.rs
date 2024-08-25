@@ -84,8 +84,6 @@ fn get_record_trackpoint(record: FitDataRecord) -> Result<TrackPoint, Error> {
             time = get_coordinate_timestamp(&data_field)?;
         } else if data_field.name() == "enhanced_altitude" {
             elevation = get_elevation_value(&data_field)?;
-        } else {
-            println!("Unexpected data field {:#?}", data_field.name());
         }
     }
 
@@ -135,8 +133,6 @@ fn get_track_file(data: Vec<FitDataRecord>) -> Result<TrackFile, Error> {
                     activity_type = activity;
                 }
             }
-        } else {
-            println!("{:#?}", record.kind());
         }
     }
 
@@ -145,9 +141,17 @@ fn get_track_file(data: Vec<FitDataRecord>) -> Result<TrackFile, Error> {
 
 pub fn read_fit(path: &Path) -> Result<TrackFile, Error> {
     let mut fp = File::open(path)?;
-    let data: Vec<FitDataRecord> = from_reader(&mut fp).unwrap();
-
-    Ok(get_track_file(data)?)
+    let data = from_reader(&mut fp);
+    match data {
+        Ok(vector) => return Ok(get_track_file(vector)?),
+        Err(err) => {
+            eprintln!("{:#?}", err);
+            return Err(Error::new(
+                ErrorKind::InvalidData,
+                "Activity type not found",
+            ));
+        }
+    }
 }
 
 #[cfg(test)]
@@ -155,8 +159,8 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_read_file() {
-        let file = Path::new("C:\\Users\\nck\\Development\\where-have-i-been\\wherehaveibeen-ng\\data\\track_fit\\1934901223.fit");
+    fn test_read_fit_file() {
+        let file = Path::new("C:\\Users\\nck\\Development\\where-have-i-been\\wherehaveibeen-ng\\data\\track-fit\\1934901223.fit");
         let result = read_fit(&file);
         assert!(result.is_ok());
     }
