@@ -1,0 +1,41 @@
+volumes:
+  db:
+    driver: local
+    name: tracks-database
+
+services:
+  # ngnix:
+  #   container_name: nginx
+  #   image: nck974/where-have-i-been-ngnix:1.0.3
+  #   restart: unless-stopped
+  #   depends_on:
+  #     - where-have-i-been
+  #     - where-have-i-beenng
+  #   ports:
+  #     - 443:443
+  #     - 80:80
+  #   environment:
+  #     - NGINX_HOST=${SERVER_IP}
+  #   volumes:
+  #     - ./ssl/:/etc/nginx/ssl/:ro
+
+  # where-have-i-been-rs:
+  #   container_name: where-have-i-been-rs
+  #   image: nck974/where-have-i-been-rs:0.0.0
+  #   restart: unless-stopped
+  #   ports:
+  #     - 3000:3000
+  #   volumes:
+  #     - tracks-database
+  #     - ./data:/app/data
+
+  where-have-i-been-ng:
+    container_name: where-have-i-been-ng
+    image: nck974/where-have-i-been-ng:0.0.0
+    restart: unless-stopped
+    environment:
+      - BACKEND_URL=https://${SERVER_IP}:3000/
+    ports:
+      - 8080:80
+
+
