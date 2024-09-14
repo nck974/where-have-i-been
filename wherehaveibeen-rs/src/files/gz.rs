@@ -73,7 +73,7 @@ mod tests {
 
     #[test]
     fn test_decompress_gz_file() {
-        let file = Path::new("C:\\Users\\nck\\Development\\where-have-i-been\\wherehaveibeen-ng\\data\\track-fit\\1934901223.fit.gz");
+        let file = Path::new("C:\\Users\\nck\\Development\\where-have-i-been\\wherehaveibeen-rs\\data\\track-fit\\1934901223.fit.gz");
         let result = decompress_gz(&file);
         dbg!(&result);
         assert!(result.is_ok());
