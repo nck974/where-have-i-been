@@ -1,5 +1,5 @@
 volumes:
-  db:
+  tracks-database:
     driver: local
     name: tracks-database
 
@@ -19,15 +19,15 @@ services:
   #   volumes:
   #     - ./ssl/:/etc/nginx/ssl/:ro
 
-  # where-have-i-been-rs:
-  #   container_name: where-have-i-been-rs
-  #   image: nck974/where-have-i-been-rs:0.0.0
-  #   restart: unless-stopped
-  #   ports:
-  #     - 3000:3000
-  #   volumes:
-  #     - tracks-database
-  #     - ./data:/app/data
+  where-have-i-been-rs:
+    container_name: where-have-i-been-rs
+    image: nck974/where-have-i-been-rs:0.0.0
+    restart: unless-stopped
+    ports:
+      - 3000:3000
+    volumes:
+      - tracks-database:/app/data
+      - ./data:/app/tracks-data
 
   where-have-i-been-ng:
     container_name: where-have-i-been-ng
