@@ -34,7 +34,7 @@ jobs:
       - name: Push Docker image to Docker Hub
         run: |
           docker tag $IMAGE_NAME:$VERSION $IMAGE_NAME:$VERSION
-          docker tag $IMAGE_NAME:latest $IMAGE_NAME:latest
+          docker tag $IMAGE_NAME:$VERSION $IMAGE_NAME:latest
           docker push $IMAGE_NAME:$VERSION
           docker push $IMAGE_NAME:latest
 
