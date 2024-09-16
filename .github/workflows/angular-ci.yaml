@@ -3,6 +3,9 @@ name: Angular Docker Image CI
 on:
   workflow_dispatch:
 
+env:
+  IMAGE_NAME: nck974/where-have-i-been-ng
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -26,9 +29,25 @@ jobs:
 
       - name: Build Docker image
         run: |
-          docker build -f Dockerfile -t nck974/where-have-i-been-ng:$VERSION . --no-cache
+          docker build -f Dockerfile -t $IMAGE_NAME:$VERSION . --no-cache
 
       - name: Push Docker image to Docker Hub
         run: |
-          docker tag nck974/where-have-i-been-ng:$VERSION nck974/where-have-i-been-ng:$VERSION
-          docker push nck974/where-have-i-been-ng:$VERSION
+          docker tag $IMAGE_NAME:$VERSION $IMAGE_NAME:$VERSION
+          docker tag $IMAGE_NAME:latest $IMAGE_NAME:latest
+          docker push $IMAGE_NAME:$VERSION
+          docker push $IMAGE_NAME:latest
+
+      - name: Update docker-compose.yml with the new version
+        run: |
+          sed -i "s|image: $IMAGE_NAME:.*|image: $IMAGE_NAME:$VERSION|" docker-compose.yml
+          echo "New docker-compose.yaml:"
+          cat docker-compose.yml
+
+      - name: Commit updated docker-compose.yml
+        run: |
+          git config --global user.name "github-actions"
+          git config --global user.email "github-actions@github.com"
+          git add docker-compose.yml
+          git commit -m "Update docker-compose.yml with $IMAGE_NAME version $VERSION"
+          git push
