@@ -38,16 +38,16 @@ jobs:
           docker push $IMAGE_NAME:$VERSION
           docker push $IMAGE_NAME:latest
 
-      - name: Update docker-compose.yml with the new version
+      - name: Update docker-compose.yaml with the new version
         run: |
-          sed -i "s|image: $IMAGE_NAME:.*|image: $IMAGE_NAME:$VERSION|" docker-compose.yml
+          sed -i "s|image: $IMAGE_NAME:.*|image: $IMAGE_NAME:$VERSION|" docker-compose.yaml
           echo "New docker-compose.yaml:"
-          cat docker-compose.yml
+          cat docker-compose.yaml
 
-      - name: Commit updated docker-compose.yml
+      - name: Commit updated docker-compose.yaml
         run: |
           git config --global user.name "github-actions"
           git config --global user.email "github-actions@github.com"
-          git add docker-compose.yml
-          git commit -m "Update docker-compose.yml with $IMAGE_NAME version $VERSION"
+          git add docker-compose.yaml
+          git commit -m "Update docker-compose.yaml with $IMAGE_NAME version $VERSION"
           git push
