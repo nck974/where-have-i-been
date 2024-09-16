@@ -4,6 +4,7 @@ import { HttpClient } from '@angular/common/http';
 import { Coordinate } from './model/coordinate';
 import { FileList } from './model/files';
 import { Observable } from 'rxjs';
+import { environment } from './environment/environment';
 
 
 
@@ -12,7 +13,7 @@ import { Observable } from 'rxjs';
 })
 export class TrackService {
 
-  backendServer: string = 'http://localhost:3000';
+  private readonly backendUrl = environment.backendUrl;
   tracksPath: string = 'tracks';
   coordinatesPath: string = 'tracks/coordinates';
   filteredTracksPath: string = 'tracks/filtered-tracks';
@@ -21,7 +22,7 @@ export class TrackService {
 
 
   getTrack(filename: string): Observable<Coordinate[]> {
-    let file = `${this.backendServer}/${this.coordinatesPath}/${filename}`;
+    let file = `${this.backendUrl}/${this.coordinatesPath}/${filename}`;
     return this.httpClient.get<Coordinate[]>(file);
   }
 
@@ -29,7 +30,7 @@ export class TrackService {
     const params = `northWestLatitude=${northEastCoordinate.lat}&northWestLongitude=${southWestCoordinate.lng}&` +
       `southEastLatitude=${southWestCoordinate.lat}&southEastLongitude=${northEastCoordinate.lng}`;
 
-    const url = `${this.backendServer}/${this.filteredTracksPath}?${params}`;
+    const url = `${this.backendUrl}/${this.filteredTracksPath}?${params}`;
     return this.httpClient.get<FileList>(url);
   }
 

@@ -2,8 +2,10 @@ use std::env;
 
 const DATABASE_PATH: &str = "tracks_database.db";
 const CACHE_FOLDER: &str = ".//.cached_tracks";
+// const TRACKS_FOLDER: &str =
+//     "C:\\Users\\nck\\Development\\where-have-i-been\\wherehaveibeen-rs\\data\\track-fit-complete\\";
 const TRACKS_FOLDER: &str =
-    "C:\\Users\\nck\\Development\\where-have-i-been\\wherehaveibeen-ng\\data\\track-complete\\";
+    "C:\\Users\\nck\\Development\\where-have-i-been\\wherehaveibeen-rs\\data\\track-complete\\";
 
 fn get_environment_variable(variable: &str, default: &str) -> String {
     env::var(&variable).unwrap_or(default.to_string())

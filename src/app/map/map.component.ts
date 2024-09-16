@@ -1,6 +1,6 @@
 import { AfterViewInit, Component, signal, WritableSignal } from '@angular/core';
 import * as L from 'leaflet';
-import 'leaflet.heat';
+import * as L2 from '../utils/maps/HeatLayer';
 import { TrackService } from '../track.service';
 import { Coordinate } from '../model/coordinate';
 import { FileList } from '../model/files';
@@ -24,7 +24,7 @@ export class MapComponent implements AfterViewInit {
   private map!: L.Map;
   private static defaultLocation: L.LatLng = new L.LatLng(49.4521, 11.0767);
   displayedTracks: L.Polyline[] = []
-  displayedHeatmap: L.HeatLayer[] = []
+  displayedHeatmap: L2.HeatLayer[] = []
   tracksToDownload: WritableSignal<number> = signal(0);
   downloadedTracks: WritableSignal<number> = signal(0);
   isLoadingTracks = false;
@@ -62,8 +62,8 @@ export class MapComponent implements AfterViewInit {
     this.displayedTracks.push(polyline);
   }
 
-  private addHeatmapToMap(heatmapData: L.HeatLatLngTuple[]) {
-    let heatmap = L.heatLayer(heatmapData, { radius: 10, max: 200, gradient: { 0.1: 'yellow', 0.4: 'orange', 0.6: 'red', 0.8: 'white' }, minOpacity: 0.8 });
+  private addHeatmapToMap(heatmapData: L2.HeatLatLngTuple[]) {
+    let heatmap = L2.heatLayer(heatmapData, { radius: 10, max: 200, gradient: { 0.1: 'yellow', 0.4: 'orange', 0.6: 'red', 0.8: 'white' }, minOpacity: 0.8 });
     heatmap.addTo(this.map);
     this.displayedHeatmap.push(heatmap);
 
@@ -128,7 +128,7 @@ export class MapComponent implements AfterViewInit {
     this.isLoadingTracks = true;
     this.heatmapService.getHeatmapInsideSquare(northEast, southWest).subscribe((rawHeatmap: HeatmapCoordinate[]) => {
 
-      const heatmapData = rawHeatmap.map<L.HeatLatLngTuple>(coordinate => [coordinate.a, coordinate.o, coordinate.f]);
+      const heatmapData = rawHeatmap.map<L2.HeatLatLngTuple>(coordinate => [coordinate.a, coordinate.o, coordinate.f]);
       this.addHeatmapToMap(heatmapData);
       this.isLoadingTracks = false;
 

@@ -113,6 +113,8 @@ fn initialize_data() {
 
 #[tokio::main]
 async fn main() {
+    println!("App is starting...");
+
     initialize_data();
 
     let app = Router::new()

@@ -160,7 +160,7 @@ mod tests {
 
     #[test]
     fn test_read_fit_file() {
-        let file = Path::new("C:\\Users\\nck\\Development\\where-have-i-been\\wherehaveibeen-ng\\data\\track-fit\\1934901223.fit");
+        let file = Path::new("C:\\Users\\nck\\Development\\where-have-i-been\\wherehaveibeen-rs\\data\\track-fit\\1934901223.fit");
         let result = read_fit(&file);
         assert!(result.is_ok());
     }
