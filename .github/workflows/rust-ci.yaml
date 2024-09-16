@@ -17,7 +17,7 @@ jobs:
       - name: Extract version from package.json
         id: extract_version
         run: |
-          VERSION=$(grep '^version' Cargo.toml | sed 's/version = "\(.*\)"/\1/')
+          VERSION=$(grep '^version' wherehaveibeen-rs/Cargo.toml | sed 's/version = "\(.*\)"/\1/')
           echo "VERSION=$VERSION"
           echo "VERSION=$VERSION" >> $GITHUB_ENV
 
