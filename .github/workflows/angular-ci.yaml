@@ -1,0 +1,34 @@
+name: Angular Docker Image CI
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Extract version from package.json
+        id: extract_version
+        run: |
+          VERSION=$(cat package.json | jq -r '.version')
+          echo "VERSION=$VERSION"
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build Docker image
+        run: |
+          docker build -f Dockerfile -t nck974/where-have-i-been-ng:$VERSION . --no-cache
+
+      - name: Push Docker image to Docker Hub
+        run: |
+          docker tag nck974/where-have-i-been-ng:$VERSION nck974/where-have-i-been-ng:$VERSION
+          docker push nck974/where-have-i-been-ng:$VERSION
