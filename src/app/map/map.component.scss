@@ -30,17 +30,37 @@
     height: auto;
 }
 
-.loading-item{
+.loading-item {
     padding: 0.5rem;
 }
 
+// Buttons that make changes in the map
 .actions-container {
     position: absolute;
     bottom: 0%;
     z-index: 1000;
     padding: 1rem;
-}
 
-.actions-container > button{
-    margin-right: 0.5rem;
+    button {
+        margin-right: 0.5rem;
+    }
+
+    .button-icon {
+        display: none;
+    }
+
+    @media (max-width: 768px) {
+        button {
+            margin-top: 0.5rem;
+        }
+
+        .button-text {
+            display: none;
+        }
+
+        .button-icon {
+            display: inline-block;
+        }
+
+    }
 }

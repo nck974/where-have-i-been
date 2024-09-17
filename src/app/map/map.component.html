@@ -24,16 +24,23 @@
     <!-- Actions -->
     <div class="actions-container">
         <button mat-flat-button (click)="showTracksForCurrentScreen()"
-            matTooltip="Show all tracks that have a point in the displayed area">Show
-            tracks</button>
+            matTooltip="Show all tracks that have a point in the displayed area">
+            <span class="button-text">Show tracks</span>
+            <span class="button-icon material-icons">track_changes</span>
+        </button>
         <button mat-flat-button (click)="showHeatmapForCurrentScreen()"
-            matTooltip="Show the heatmap of all tracks">Show
-            heatmap</button>
+            matTooltip="Show the heatmap of all tracks">
+            <span class="button-text">Show heatmap</span>
+            <span class="button-icon material-icons">blur_on</span>
+        </button>
         <button mat-raised-button
             [disabled]="displayedTracks.length == 0 && displayedHeatmap.length==0"
             [disabledInteractive]="displayedTracks.length == 0 && displayedHeatmap.length==0"
             matTooltip="Remove the displayed information from the map"
             color="secondary"
-            (click)="clearMap()">Clear</button>
+            (click)="clearMap()">
+            <span class="button-text">Clear</span>
+            <span class="button-icon material-icons">delete</span>
+        </button>
     </div>
 </div>
