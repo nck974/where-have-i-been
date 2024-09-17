@@ -1,5 +1,5 @@
 # docker build -f Dockerfile -t nck974/where-have-i-been-ng:0.0.0 . --no-cache
-# docker push nck974/where-have-i-been-ng:1.0.4
+# docker push nck974/where-have-i-been-ng:0.0.0
 #################
 # Build the app #
 #################
