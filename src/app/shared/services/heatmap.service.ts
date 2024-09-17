@@ -2,8 +2,8 @@ import { Injectable } from '@angular/core';
 import L from 'leaflet';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { HeatmapCoordinate } from './model/heatmap';
-import { environment } from './environment/environment';
+import { HeatmapCoordinate } from '../../model/heatmap';
+import { environment } from '../../environment/environment';
 
 @Injectable({
   providedIn: 'root'

@@ -1,7 +1,7 @@
 import { AfterViewInit, Component, signal, WritableSignal } from '@angular/core';
 import * as L from 'leaflet';
-import * as L2 from '../utils/maps/HeatLayer';
-import { TrackService } from '../track.service';
+import * as L2 from '../shared/utils/maps/HeatLayer';
+import { TrackService } from '../shared/services/track.service';
 import { Coordinate } from '../model/coordinate';
 import { FileList } from '../model/files';
 import { MatIconModule } from '@angular/material/icon';
@@ -9,7 +9,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatTooltip } from '@angular/material/tooltip';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatChipsModule } from '@angular/material/chips';
-import { HeatmapService } from '../heatmap.service';
+import { HeatmapService } from '../shared/services/heatmap.service';
 import { HeatmapCoordinate } from '../model/heatmap';
 
 @Component({

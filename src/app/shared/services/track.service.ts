@@ -1,10 +1,10 @@
 import { Injectable } from '@angular/core';
 import L from 'leaflet';
 import { HttpClient } from '@angular/common/http';
-import { Coordinate } from './model/coordinate';
-import { FileList } from './model/files';
+import { Coordinate } from '../../model/coordinate';
+import { FileList } from '../../model/files';
 import { Observable } from 'rxjs';
-import { environment } from './environment/environment';
+import { environment } from '../../environment/environment';
 
 
 
