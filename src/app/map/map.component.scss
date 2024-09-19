@@ -49,6 +49,16 @@
         display: none;
     }
 
+    // Badge around the active filter
+    .filter-active-indicator{
+        display: inline-block;
+        background-color: red;
+        border-radius: 50%;
+        width: 10px;
+        height: 10px;
+        margin-left: 5px;
+    }
+
     @media (max-width: 768px) {
         button {
             margin-top: 0.5rem;

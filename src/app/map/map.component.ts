@@ -1,4 +1,4 @@
-import { AfterViewInit, Component, signal, WritableSignal } from '@angular/core';
+import { AfterViewInit, Component, inject, signal, WritableSignal } from '@angular/core';
 import * as L from 'leaflet';
 import * as L2 from '../shared/utils/maps/HeatLayer';
 import { TrackService } from '../shared/services/track.service';
@@ -11,23 +11,40 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatChipsModule } from '@angular/material/chips';
 import { HeatmapService } from '../shared/services/heatmap.service';
 import { HeatmapCoordinate } from '../model/heatmap';
+import { MatDialog } from '@angular/material/dialog';
+import { FilterDialogComponent } from './components/filter-dialog/filter-dialog.component';
+import { TrackFilter } from '../model/track-filter';
 
 @Component({
   selector: 'app-map',
   standalone: true,
-  imports: [MatButtonModule, MatIconModule, MatTooltip, MatProgressSpinnerModule, MatChipsModule],
+  imports: [
+    MatButtonModule,
+    MatIconModule,
+    MatTooltip,
+    MatProgressSpinnerModule,
+    MatChipsModule
+  ],
   templateUrl: './map.component.html',
   styleUrl: './map.component.scss'
 })
 export class MapComponent implements AfterViewInit {
-
-  private map!: L.Map;
+  // Config
   private static defaultLocation: L.LatLng = new L.LatLng(49.4521, 11.0767);
+
+  // Display map
+  private map!: L.Map;
   displayedTracks: L.Polyline[] = []
   displayedHeatmap: L2.HeatLayer[] = []
+
+  // Download tracks
   tracksToDownload: WritableSignal<number> = signal(0);
   downloadedTracks: WritableSignal<number> = signal(0);
   isLoadingTracks = false;
+
+  // Filtering
+  trackFilters?: TrackFilter;
+  readonly dialog = inject(MatDialog);
 
   constructor(private trackService: TrackService, private heatmapService: HeatmapService) { }
 
@@ -97,7 +114,7 @@ export class MapComponent implements AfterViewInit {
 
     this.tracksToDownload.set(0);
     this.isLoadingTracks = true;
-    this.trackService.getTracksInsideSquare(northEast, southWest).subscribe((file: FileList) => {
+    this.trackService.getTracksInsideSquare(northEast, southWest, this.trackFilters).subscribe((file: FileList) => {
 
       const numberFilesFound = file.fileList.length;
       if (numberFilesFound > 0) {
@@ -149,6 +166,27 @@ export class MapComponent implements AfterViewInit {
       this.map.removeLayer(heatMap);
     })
     this.displayedHeatmap.splice(0, this.displayedHeatmap.length);
+  }
+
+  /// Sets the filters that will be applied when search tracks is pressed
+  setFilters() {
+    const dialogRef = this.dialog.open(FilterDialogComponent, {
+      data: this.trackFilters,
+    });
+
+    dialogRef.afterClosed().subscribe(filter => {
+      console.log('The filtering dialog was closed');
+      if (filter !== undefined) {
+        console.log('Filter is:');
+        console.log(filter);
+        if (filter.activity_type == undefined) {
+          this.trackFilters = undefined;
+        } else {
+          this.trackFilters = filter;
+        }
+      }
+    }
+    );
   }
 
 }
