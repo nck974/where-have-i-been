@@ -2,5 +2,5 @@
     window["env"] = window["env"] || {};
 
     // Environment variables
-    window["env"]["backendURL"] = "${BACKEND_URL}";
+    window["env"]["backendUrl"] = "${BACKEND_URL}";
 })(this);
