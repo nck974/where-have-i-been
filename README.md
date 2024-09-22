@@ -18,3 +18,10 @@ This has been tested with the files provided by an export of the personal data o
 3. Start the stack with `docker-compose up -d`.
 4. The first start may take a while until all tracks have been processed.
 5. Access with the browser to the configured domain and port `8080`.
+
+## Configuration
+
+| Variable Name      | Description / Purpose                                    |
+|--------------------|----------------------------------------------------------|
+| `SERVER_IP`          | Domain or IP where the app is deployed.        |
+| `CONVERSIONS_JSON`  | A JSON string that maps different activities to a different value than the one found in the GPX or FIT file. Example:`{"StandUpPaddling": "Stand Up Paddling", ...}` |

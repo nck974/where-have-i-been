@@ -42,5 +42,16 @@
             <span class="button-text">Clear</span>
             <span class="button-icon material-icons">delete</span>
         </button>
+        <button mat-raised-button
+            matTooltip="Filter tracks"
+            color="secondary"
+            (click)="setFilters()">
+            <span class="button-text">Filters</span>
+            <span class="button-icon material-icons">filter</span>
+            <!-- Add a badge if filters are active -->
+            @if(trackFilters){
+            <span class="filter-active-indicator"></span>
+            }
+        </button>
     </div>
 </div>

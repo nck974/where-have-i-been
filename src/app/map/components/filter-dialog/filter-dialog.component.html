@@ -1,0 +1,34 @@
+@if(!isLoading){
+<mat-dialog-content>
+
+  <!-- Filter activity typw -->
+  <mat-form-field>
+    <mat-label>Activity Type</mat-label>
+    <mat-select [(ngModel)]="activity_type">
+      <mat-option [value]="null" selected>All</mat-option>
+      @if (this.allActivityTypes){
+      @for(activity of this.allActivityTypes; track activity){
+      <mat-option [value]="activity">
+        {{ activity | capitalizeFirst}}
+      </mat-option>
+      }
+      }
+    </mat-select>
+  </mat-form-field>
+</mat-dialog-content>
+
+<!-- Show buttons -->
+<mat-dialog-actions>
+  <button mat-button (click)="onReset()" color="secondary">Reset</button>
+  <button mat-button (click)="onSaveFilters()"
+    cdkFocusInitial>Save filters</button>
+</mat-dialog-actions>
+}@else {
+
+  <!-- Loading indicator while the data is downloaded -->
+  <div class="loading-container">
+    <mat-progress-spinner mode="indeterminate"
+      diameter="100">
+    </mat-progress-spinner>
+  </div>
+}

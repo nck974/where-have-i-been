@@ -5,6 +5,8 @@ import { Coordinate } from '../../model/coordinate';
 import { FileList } from '../../model/files';
 import { Observable } from 'rxjs';
 import { environment } from '../../environment/environment';
+import { TrackFilter } from '../../model/track-filter';
+import { ActivityTypes } from '../../model/activity-types';
 
 
 
@@ -14,21 +16,30 @@ import { environment } from '../../environment/environment';
 export class TrackService {
 
   private readonly backendUrl = environment.backendUrl;
-  tracksPath: string = 'tracks';
-  coordinatesPath: string = 'tracks/coordinates';
-  filteredTracksPath: string = 'tracks/filtered-tracks';
+  private coordinatesPath: string = 'tracks/coordinates';
+  private filteredTracksPath: string = 'tracks/filtered-tracks';
+  private allActivityTypes: string = 'tracks/activity-types';
 
   constructor(private httpClient: HttpClient) { }
 
 
   getTrack(filename: string): Observable<Coordinate[]> {
-    let file = `${this.backendUrl}/${this.coordinatesPath}/${filename}`;
-    return this.httpClient.get<Coordinate[]>(file);
+    let url = `${this.backendUrl}/${this.coordinatesPath}/${filename}`;
+    return this.httpClient.get<Coordinate[]>(url);
   }
 
-  getTracksInsideSquare(northEastCoordinate: L.LatLng, southWestCoordinate: L.LatLng): Observable<FileList> {
-    const params = `northWestLatitude=${northEastCoordinate.lat}&northWestLongitude=${southWestCoordinate.lng}&` +
+  getAllActivityTypes(): Observable<ActivityTypes> {
+    let url = `${this.backendUrl}/${this.allActivityTypes}`;
+    return this.httpClient.get<ActivityTypes>(url);
+  }
+
+  getTracksInsideSquare(northEastCoordinate: L.LatLng, southWestCoordinate: L.LatLng, filters?: TrackFilter): Observable<FileList> {
+    let params = `northWestLatitude=${northEastCoordinate.lat}&northWestLongitude=${southWestCoordinate.lng}&` +
       `southEastLatitude=${southWestCoordinate.lat}&southEastLongitude=${northEastCoordinate.lng}`;
+
+    if (filters?.activity_type) {
+      params += `&activityType=${filters.activity_type}`;
+    }
 
     const url = `${this.backendUrl}/${this.filteredTracksPath}?${params}`;
     return this.httpClient.get<FileList>(url);

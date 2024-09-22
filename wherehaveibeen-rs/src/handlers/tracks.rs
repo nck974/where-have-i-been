@@ -8,6 +8,7 @@ use serde_json::json;
 use std::collections::HashMap;
 use std::path::Path as FilePath;
 
+use crate::database::tracks::get_all_activity_types;
 use crate::database::tracks::get_tracks_inside_location;
 use crate::model::track::TrackInformation;
 use crate::utils::cache_utils::read_cached_coordinates;
@@ -62,6 +63,10 @@ pub async fn get_filtered_tracks(
         .get("southEastLongitude")
         .and_then(|v| v.parse::<f32>().ok())
         .unwrap_or_default();
+    let activity_type = params
+        .get("activityType")
+        .and_then(|v| v.parse::<String>().ok())
+        .unwrap_or_default();
 
     let track_information = TrackInformation::new(
         north_west_latitude,
@@ -69,7 +74,7 @@ pub async fn get_filtered_tracks(
         south_east_latitude,
         south_east_longitude,
         "".to_string(), // date is not implemented yet
-        "".to_string(), // activity type is not implemented yet
+        activity_type,
     );
     dbg!(&track_information);
 
@@ -80,6 +85,32 @@ pub async fn get_filtered_tracks(
                 .header("Content-Type", "application/json")
                 .header("Access-Control-Allow-Origin", "*")
                 .body(Json(json!({ "fileList": files })).into_response())
+                .unwrap();
+        }
+        Err(e) => {
+            println!("Error: {}", e);
+            return Response::builder()
+            .status(StatusCode::NOT_FOUND)
+            .header("Content-Type", "application/json")
+            .header("Access-Control-Allow-Origin", "*")
+            .body(
+                Json(json!({"message": "No tracks could be found", "code": 404, "success": false}))
+                    .to_string()
+                    .into_response(),
+            )
+            .unwrap();
+        }
+    }
+}
+
+pub async fn get_activity_types() -> impl IntoResponse {
+    match get_all_activity_types() {
+        Ok(files) => {
+            return Response::builder()
+                .status(StatusCode::OK)
+                .header("Content-Type", "application/json")
+                .header("Access-Control-Allow-Origin", "*")
+                .body(Json(json!({ "activityTypes": files })).into_response())
                 .unwrap();
         }
         Err(e) => {

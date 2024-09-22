@@ -107,7 +107,7 @@ pub fn insert_file(
 pub fn get_tracks_inside_location(track_information: TrackInformation) -> Result<Vec<String>> {
     let conn = Connection::open(get_database_path()).unwrap();
 
-    let mut stmt  = conn.prepare(
+    let mut query = String::from(
         "SELECT 
 	filename
 FROM 
@@ -156,20 +156,30 @@ WHERE
                 t.south_east_latitude <= :provided_north_west_latitude AND t.south_east_latitude >= :provided_south_east_latitude AND
                 t.south_east_longitude >= :provided_north_west_longitude AND t.south_east_longitude  <= :provided_south_east_longitude
             )
-        )
-;"
-    )?;
+        )"
+    );
+
+    if !track_information.activity_type.is_empty() {
+        query.push_str(" AND t.activity_type = :activity_type");
+    } else {
+        // TODO: Solve this in a cleaner way. named_params does not allow conditionally adding filters
+        query.push_str(
+            " AND (t.activity_type = :activity_type OR t.activity_type != :activity_type)",
+        );
+    }
+
+    let mut stmt = conn.prepare(&query)?;
+
+    let params = named_params! {
+        ":provided_north_west_latitude": track_information.north_west_latitude,
+        ":provided_north_west_longitude": track_information.north_west_longitude,
+        ":provided_south_east_latitude": track_information.south_east_latitude,
+        ":provided_south_east_longitude": track_information.south_east_longitude,
+        ":activity_type": track_information.activity_type
+    };
 
     let filenames = stmt
-        .query_map(
-            named_params! {
-                ":provided_north_west_latitude": track_information.north_west_latitude,
-                ":provided_north_west_longitude": track_information.north_west_longitude,
-                ":provided_south_east_latitude": track_information.south_east_latitude,
-                ":provided_south_east_longitude": track_information.south_east_longitude,
-            },
-            |row| Ok(row.get::<_, String>(0)?),
-        )
+        .query_map(params, |row| Ok(row.get::<_, String>(0)?))
         .unwrap();
 
     let mut files = Vec::new();
@@ -186,4 +196,31 @@ WHERE
     dbg!(&files);
 
     Ok(files)
+}
+
+pub fn get_all_activity_types() -> Result<Vec<String>> {
+    let conn = Connection::open(get_database_path()).unwrap();
+
+    let query = String::from("SELECT DISTINCT t.activity_type FROM tracks t WHERE t.activity_type != '' ORDER BY 1;");
+
+    let mut stmt = conn.prepare(&query)?;
+
+    let activities = stmt
+        .query_map((), |row| Ok(row.get::<_, String>(0)?))
+        .unwrap();
+
+    let mut activity_types = Vec::new();
+    for activity in activities {
+        match activity {
+            Ok(f) => {
+                activity_types.push(f);
+            }
+            Err(e) => {
+                eprintln!("Error retrieving activity: {}", e);
+            }
+        }
+    }
+    dbg!(&activity_types);
+
+    Ok(activity_types)
 }
