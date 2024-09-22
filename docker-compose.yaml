@@ -45,7 +45,7 @@ services:
 
   where-have-i-been-ng:
     container_name: where-have-i-been-ng
-    image: nck974/where-have-i-been-ng:0.0.0
+    image: nck974/where-have-i-been-ng:0.1.0
     restart: unless-stopped
     environment:
       - BACKEND_URL=https://${SERVER_IP}:3000/
