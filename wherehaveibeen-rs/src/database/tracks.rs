@@ -201,7 +201,7 @@ WHERE
 pub fn get_all_activity_types() -> Result<Vec<String>> {
     let conn = Connection::open(get_database_path()).unwrap();
 
-    let query = String::from("SELECT DISTINCT t.activity_type FROM tracks t;");
+    let query = String::from("SELECT DISTINCT t.activity_type FROM tracks t WHERE t.activity_type != '' ORDER BY 1;");
 
     let mut stmt = conn.prepare(&query)?;
 

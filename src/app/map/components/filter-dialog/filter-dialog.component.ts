@@ -17,6 +17,7 @@ import { MatSelectModule } from '@angular/material/select';
 import { TrackService } from '../../../shared/services/track.service';
 import { finalize } from 'rxjs';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { CapitalizeFirstPipe } from "../../../shared/pipes/capitalize-first.pipe";
 
 
 @Component({
@@ -33,8 +34,9 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
     MatDialogClose,
     MatSelectModule,
     MatOptionModule,
-    MatProgressSpinnerModule
-  ],
+    MatProgressSpinnerModule,
+    CapitalizeFirstPipe
+],
   templateUrl: './filter-dialog.component.html',
   styleUrl: './filter-dialog.component.scss'
 })

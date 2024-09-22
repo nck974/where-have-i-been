@@ -28,6 +28,20 @@ services:
     volumes:
       - tracks-database:/app/data
       - ./data:/app/tracks-data
+    environment:
+      # Use this map to convert activity types to a common type
+      ACTIVITY_TYPE_CONVERSIONS: |
+        {
+          "StandUpPaddling": "Stand Up Paddling",
+          "IceSkate": "Ice Skate",
+          "generic": "other",
+          "hiking": "walking",
+          "ebikeride": "cycling",
+          "Biking": "cycling",
+          "biking": "cycling",
+          "1": "cycling",
+          "Velomobile": "cycling"
+        }
 
   where-have-i-been-ng:
     container_name: where-have-i-been-ng
@@ -37,5 +51,3 @@ services:
       - BACKEND_URL=https://${SERVER_IP}:3000/
     ports:
       - 8080:80
-
-

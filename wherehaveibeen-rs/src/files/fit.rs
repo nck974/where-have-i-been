@@ -7,7 +7,10 @@ use std::{
 
 use fitparser::{from_reader, profile::MesgNum, FitDataField, FitDataRecord, Value};
 
-use crate::model::{track::TrackFile, trackpoint::TrackPoint};
+use crate::{
+    model::{track::TrackFile, trackpoint::TrackPoint},
+    utils::activity_type::sanitize_activity_type,
+};
 
 fn semicircles_to_degrees(semicircles: &i32) -> f32 {
     const SEMICIRCLES_TO_DEGREES: f32 = 180.0 / (2u32.pow(31) as f32);
@@ -60,7 +63,8 @@ fn get_activity_type(data_field: &FitDataField) -> Result<String, Error> {
         let value = data_field.value();
         match value {
             Value::String(val) => {
-                return Ok(val.clone());
+                let activity_type = sanitize_activity_type(val);
+                return Ok(activity_type);
             }
             _ => return Err(Error::new(ErrorKind::InvalidData, "Unexpected value type")),
         }

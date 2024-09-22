@@ -1,6 +1,6 @@
 use crate::{
     model::{track::TrackFile, trackpoint::TrackPoint},
-    utils::file_utils::read_file,
+    utils::{activity_type::sanitize_activity_type, file_utils::read_file},
 };
 use quick_xml::de::from_str;
 use serde::{Deserialize, Serialize};
@@ -61,7 +61,8 @@ struct Gpx {
 fn get_activity_type(gpx: &Gpx) -> Result<String, Error> {
     if let Some(ref track) = gpx.track {
         if let Some(ref activity_type) = track.activity_type {
-            return Ok(activity_type.clone());
+            let activity_type = sanitize_activity_type(activity_type);
+            return Ok(activity_type);
         }
     }
     Ok("other".to_string())

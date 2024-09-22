@@ -9,7 +9,7 @@
       @if (this.allActivityTypes){
       @for(activity of this.allActivityTypes; track activity){
       <mat-option [value]="activity">
-        {{ activity }}
+        {{ activity | capitalizeFirst}}
       </mat-option>
       }
       }
