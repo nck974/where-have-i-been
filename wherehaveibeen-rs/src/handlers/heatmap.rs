@@ -6,7 +6,7 @@ use axum::response::Response;
 use serde_json::json;
 use std::collections::HashMap;
 
-use crate::database::heatmap::get_heatmap_inside_location;
+use crate::database::heatmap::HeatmapDatabase;
 use crate::model::track::TrackInformation;
 
 pub async fn get_filtered_heatmap(
@@ -38,7 +38,8 @@ pub async fn get_filtered_heatmap(
         "".to_string(), // activity type is not implemented yet
     );
 
-    match get_heatmap_inside_location(track_information) {
+    let heatmap_db = HeatmapDatabase::new().unwrap();
+    match heatmap_db.get_heatmap_inside_location(track_information) {
         Ok(coordinates) => {
             return Response::builder()
                 .status(StatusCode::OK)

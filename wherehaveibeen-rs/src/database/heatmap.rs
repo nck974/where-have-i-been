@@ -155,48 +155,47 @@ impl HeatmapDatabase {
 
         Ok(())
     }
-}
 
-pub fn get_heatmap_inside_location(
-    track_information: TrackInformation,
-) -> Result<Vec<HeatmapCoordinate>> {
-    let conn = Connection::open(get_database_path()).unwrap();
+    pub fn get_heatmap_inside_location(
+        &self,
+        track_information: TrackInformation,
+    ) -> Result<Vec<HeatmapCoordinate>> {
+        let mut stmt = self.conn.prepare(FILTER_HEATMAP_IN_LOCATION)?;
 
-    let mut stmt = conn.prepare(FILTER_HEATMAP_IN_LOCATION)?;
+        let row_content = stmt
+            .query_map(
+                named_params! {
+                    ":north_west_latitude": track_information.north_west_latitude,
+                    ":north_west_longitude": track_information.north_west_longitude,
+                    ":south_east_latitude": track_information.south_east_latitude,
+                    ":south_east_longitude": track_information.south_east_longitude,
+                },
+                |row| {
+                    Ok((
+                        row.get::<_, f32>(0)?,
+                        row.get::<_, f32>(1)?,
+                        row.get::<_, i32>(2)?,
+                    ))
+                },
+            )
+            .unwrap();
 
-    let row_content = stmt
-        .query_map(
-            named_params! {
-                ":north_west_latitude": track_information.north_west_latitude,
-                ":north_west_longitude": track_information.north_west_longitude,
-                ":south_east_latitude": track_information.south_east_latitude,
-                ":south_east_longitude": track_information.south_east_longitude,
-            },
-            |row| {
-                Ok((
-                    row.get::<_, f32>(0)?,
-                    row.get::<_, f32>(1)?,
-                    row.get::<_, i32>(2)?,
-                ))
-            },
-        )
-        .unwrap();
-
-    let mut heatmap: Vec<HeatmapCoordinate> = Vec::new();
-    for row in row_content {
-        match row {
-            Ok((latitude, longitude, frequency)) => {
-                heatmap.push(HeatmapCoordinate::new(
-                    latitude.to_string(),
-                    longitude.to_string(),
-                    frequency.to_string(),
-                ));
-            }
-            Err(e) => {
-                eprintln!("Error retrieving heatmap: {}", e);
+        let mut heatmap: Vec<HeatmapCoordinate> = Vec::new();
+        for row in row_content {
+            match row {
+                Ok((latitude, longitude, frequency)) => {
+                    heatmap.push(HeatmapCoordinate::new(
+                        latitude.to_string(),
+                        longitude.to_string(),
+                        frequency.to_string(),
+                    ));
+                }
+                Err(e) => {
+                    eprintln!("Error retrieving heatmap: {}", e);
+                }
             }
         }
-    }
 
-    Ok(heatmap)
+        Ok(heatmap)
+    }
 }
