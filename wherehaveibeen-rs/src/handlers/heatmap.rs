@@ -43,7 +43,6 @@ pub async fn get_filtered_heatmap(
             return Response::builder()
                 .status(StatusCode::OK)
                 .header("Content-Type", "application/json")
-                .header("Access-Control-Allow-Origin", "*")
                 .body(serde_json::to_string(&coordinates).unwrap())
                 .unwrap();
         }
@@ -52,7 +51,6 @@ pub async fn get_filtered_heatmap(
             return Response::builder()
             .status(StatusCode::NOT_FOUND)
             .header("Content-Type", "application/json")
-            .header("Access-Control-Allow-Origin", "*")
             .body(
                 Json(json!({"message": "The provided heatmap could not be found", "code": 404, "success": false}))
                         .to_string()

@@ -1,6 +1,6 @@
 [package]
 name = "wherehaveibeen-rs"
-version = "0.2.0"
+version = "0.2.1"
 edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
@@ -15,3 +15,4 @@ rusqlite = { version = "0.32.1", features = ["bundled"] }
 serde = { version = "1.0.204", features = ["derive"] }
 serde_json = "1.0.120"
 tokio = { version = "1.39.2", features = ["rt", "rt-multi-thread"] }
+tower-http = { version = "0.6.0", features = ["cors"] }

@@ -10,6 +10,9 @@ use std::path::Path;
 use std::process::exit;
 use std::time::Instant;
 
+use tower_http::cors::{Any, CorsLayer};
+use axum::http::header::CONTENT_TYPE;
+use axum::http::Method;
 use axum::Router;
 use database::heatmap::{create_heatmap_index, initialize_heatmap_table, update_heatmap};
 use database::tracks::{
@@ -117,9 +120,15 @@ async fn main() {
 
     initialize_data();
 
+    let cors = CorsLayer::new()
+        .allow_methods([Method::GET, Method::POST])
+        .allow_origin(Any)
+        .allow_headers([CONTENT_TYPE]);
+
     let app = Router::new()
         .nest("/tracks", routes::tracks::router())
-        .nest("/heatmap", routes::heatmap::router());
+        .nest("/heatmap", routes::heatmap::router())
+        .layer(cors);
 
     // run our app with hyper, listening globally on port 3000
     let listener = tokio::net::TcpListener::bind("0.0.0.0:3000").await.unwrap();

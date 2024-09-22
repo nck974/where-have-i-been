@@ -25,7 +25,6 @@ pub async fn get_tracks() -> impl IntoResponse {
             return Response::builder()
                 .status(StatusCode::OK)
                 .header("Content-Type", "application/json")
-                .header("Access-Control-Allow-Origin", "*")
                 .body(Json(json!({ "fileList": files })).into_response())
                 .unwrap();
         }
@@ -34,7 +33,6 @@ pub async fn get_tracks() -> impl IntoResponse {
             return Response::builder()
             .status(StatusCode::NOT_FOUND)
             .header("Content-Type", "application/json")
-            .header("Access-Control-Allow-Origin", "*")
             .body(
                 Json(json!({"message": "The provided track could not be found", "code": 404, "success": false}))
                     .to_string()
@@ -83,7 +81,6 @@ pub async fn get_filtered_tracks(
             return Response::builder()
                 .status(StatusCode::OK)
                 .header("Content-Type", "application/json")
-                .header("Access-Control-Allow-Origin", "*")
                 .body(Json(json!({ "fileList": files })).into_response())
                 .unwrap();
         }
@@ -92,7 +89,6 @@ pub async fn get_filtered_tracks(
             return Response::builder()
             .status(StatusCode::NOT_FOUND)
             .header("Content-Type", "application/json")
-            .header("Access-Control-Allow-Origin", "*")
             .body(
                 Json(json!({"message": "No tracks could be found", "code": 404, "success": false}))
                     .to_string()
@@ -109,7 +105,6 @@ pub async fn get_activity_types() -> impl IntoResponse {
             return Response::builder()
                 .status(StatusCode::OK)
                 .header("Content-Type", "application/json")
-                .header("Access-Control-Allow-Origin", "*")
                 .body(Json(json!({ "activityTypes": files })).into_response())
                 .unwrap();
         }
@@ -118,7 +113,6 @@ pub async fn get_activity_types() -> impl IntoResponse {
             return Response::builder()
             .status(StatusCode::NOT_FOUND)
             .header("Content-Type", "application/json")
-            .header("Access-Control-Allow-Origin", "*")
             .body(
                 Json(json!({"message": "No tracks could be found", "code": 404, "success": false}))
                     .to_string()
@@ -137,7 +131,6 @@ pub async fn get_track(Path(filename): Path<String>) -> impl IntoResponse {
             return Response::builder()
                 .status(StatusCode::OK)
                 .header("Content-Type", "application/gpx+xml")
-                .header("Access-Control-Allow-Origin", "*")
                 .body(file)
                 .unwrap();
         }
@@ -146,7 +139,6 @@ pub async fn get_track(Path(filename): Path<String>) -> impl IntoResponse {
             return Response::builder()
                 .status(StatusCode::NOT_FOUND)
                 .header("Content-Type", "application/json")
-                .header("Access-Control-Allow-Origin", "*")
                 .body(
                     Json(json!({"message": "The provided track could not be found", "code": 404, "success": false}))
                         .to_string()
@@ -165,7 +157,6 @@ pub async fn get_track_coordinates(Path(filename): Path<String>) -> impl IntoRes
             return Response::builder()
                 .status(StatusCode::OK)
                 .header("Content-Type", "application/json")
-                .header("Access-Control-Allow-Origin", "*")
                 .body(serde_json::to_string(&coordinates).unwrap())
                 .unwrap();
         }
@@ -174,7 +165,6 @@ pub async fn get_track_coordinates(Path(filename): Path<String>) -> impl IntoRes
             return Response::builder()
                 .status(StatusCode::NOT_FOUND)
                 .header("Content-Type", "application/json")
-                .header("Access-Control-Allow-Origin", "*")
                 .body(
                     Json(json!({"message": "The provided track could not be found", "code": 404, "success": false}))
                         .to_string()
