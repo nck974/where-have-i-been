@@ -48,6 +48,6 @@ services:
     image: nck974/where-have-i-been-ng:0.1.1
     restart: unless-stopped
     environment:
-      - BACKEND_URL=https://${SERVER_IP}:3000/
+      - BACKEND_URL=http://${SERVER_IP}:3000
     ports:
       - 8080:80
