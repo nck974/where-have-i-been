@@ -8,8 +8,7 @@ use serde_json::json;
 use std::collections::HashMap;
 use std::path::Path as FilePath;
 
-use crate::database::tracks::get_all_activity_types;
-use crate::database::tracks::get_tracks_inside_location;
+use crate::database::tracks::TracksDatabase;
 use crate::model::track::TrackInformation;
 use crate::utils::cache_utils::read_cached_coordinates;
 use crate::utils::environment::get_cache_directory;
@@ -76,7 +75,8 @@ pub async fn get_filtered_tracks(
     );
     dbg!(&track_information);
 
-    match get_tracks_inside_location(track_information) {
+    let tracks_db = TracksDatabase::new().unwrap();
+    match tracks_db.get_tracks_inside_location(track_information) {
         Ok(files) => {
             return Response::builder()
                 .status(StatusCode::OK)
@@ -100,7 +100,8 @@ pub async fn get_filtered_tracks(
 }
 
 pub async fn get_activity_types() -> impl IntoResponse {
-    match get_all_activity_types() {
+    let tracks_db = TracksDatabase::new().unwrap();
+    match tracks_db.get_all_activity_types() {
         Ok(files) => {
             return Response::builder()
                 .status(StatusCode::OK)
