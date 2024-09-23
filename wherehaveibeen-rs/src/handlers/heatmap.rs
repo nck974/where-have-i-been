@@ -1,13 +1,11 @@
 use axum::extract::Query;
-use axum::http::StatusCode;
 use axum::response::IntoResponse;
-use axum::response::Json;
-use axum::response::Response;
-use serde_json::json;
 use std::collections::HashMap;
 
 use crate::database::heatmap::HeatmapDatabase;
 use crate::model::track::TrackInformation;
+use crate::utils::api_response::json_not_found;
+use crate::utils::api_response::json_ok;
 
 pub async fn get_filtered_heatmap(
     Query(params): Query<HashMap<String, String>>,
@@ -35,29 +33,17 @@ pub async fn get_filtered_heatmap(
         south_east_latitude,
         south_east_longitude,
         "".to_string(), // date is not implemented yet
-        "".to_string(), // activity type is not implemented yet
+        "".to_string(), // activity type is not available for heatmap
     );
 
     let heatmap_db = HeatmapDatabase::new().unwrap();
     match heatmap_db.get_heatmap_inside_location(track_information) {
         Ok(coordinates) => {
-            return Response::builder()
-                .status(StatusCode::OK)
-                .header("Content-Type", "application/json")
-                .body(serde_json::to_string(&coordinates).unwrap())
-                .unwrap();
+            return json_ok(&coordinates).into_response();
         }
         Err(e) => {
             println!("Error: {}", e);
-            return Response::builder()
-            .status(StatusCode::NOT_FOUND)
-            .header("Content-Type", "application/json")
-            .body(
-                Json(json!({"message": "The provided heatmap could not be found", "code": 404, "success": false}))
-                        .to_string()
-                        .into(),
-            )
-            .unwrap();
+            return json_not_found("No points where found in the given area").into_response();
         }
     }
 }
