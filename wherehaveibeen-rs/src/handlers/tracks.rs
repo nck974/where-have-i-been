@@ -11,6 +11,7 @@ use crate::database::tracks::TracksDatabase;
 use crate::model::track::TrackInformation;
 use crate::utils::api_response::json_not_found;
 use crate::utils::api_response::json_ok;
+use crate::utils::api_utils::get_query_parameter;
 use crate::utils::cache_utils::read_cached_coordinates;
 use crate::utils::environment::get_cache_directory;
 use crate::utils::environment::get_tracks_directory;
@@ -34,26 +35,11 @@ pub async fn get_tracks() -> impl IntoResponse {
 pub async fn get_filtered_tracks(
     Query(params): Query<HashMap<String, String>>,
 ) -> impl IntoResponse {
-    let north_west_latitude = params
-        .get("northWestLatitude")
-        .and_then(|v| v.parse::<f32>().ok())
-        .unwrap_or_default();
-    let north_west_longitude = params
-        .get("northWestLongitude")
-        .and_then(|v| v.parse::<f32>().ok())
-        .unwrap_or_default();
-    let south_east_latitude = params
-        .get("southEastLatitude")
-        .and_then(|v| v.parse::<f32>().ok())
-        .unwrap_or_default();
-    let south_east_longitude = params
-        .get("southEastLongitude")
-        .and_then(|v| v.parse::<f32>().ok())
-        .unwrap_or_default();
-    let activity_type = params
-        .get("activityType")
-        .and_then(|v| v.parse::<String>().ok())
-        .unwrap_or_default();
+    let north_west_latitude: f32 = get_query_parameter(&params, "northWestLatitude");
+    let north_west_longitude: f32 = get_query_parameter(&params, "northWestLongitude");
+    let south_east_latitude: f32 = get_query_parameter(&params, "southEastLatitude");
+    let south_east_longitude: f32 = get_query_parameter(&params, "southEastLongitude");
+    let activity_type: String = get_query_parameter(&params, "activityType");
 
     let track_information = TrackInformation::new(
         north_west_latitude,
@@ -84,7 +70,7 @@ pub async fn get_activity_types() -> impl IntoResponse {
             return json_ok(json!({ "activityTypes": activity_types })).into_response();
         }
         Err(e) => {
-            println!("Error: {}", e);
+            eprintln!("Error: {}", e);
             return json_not_found("No tracks could be found").into_response();
         }
     }

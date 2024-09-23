@@ -6,26 +6,15 @@ use crate::database::heatmap::HeatmapDatabase;
 use crate::model::track::TrackInformation;
 use crate::utils::api_response::json_not_found;
 use crate::utils::api_response::json_ok;
+use crate::utils::api_utils::get_query_parameter;
 
 pub async fn get_filtered_heatmap(
     Query(params): Query<HashMap<String, String>>,
 ) -> impl IntoResponse {
-    let north_west_latitude = params
-        .get("northWestLatitude")
-        .and_then(|v| v.parse::<f32>().ok())
-        .unwrap_or_default();
-    let north_west_longitude = params
-        .get("northWestLongitude")
-        .and_then(|v| v.parse::<f32>().ok())
-        .unwrap_or_default();
-    let south_east_latitude = params
-        .get("southEastLatitude")
-        .and_then(|v| v.parse::<f32>().ok())
-        .unwrap_or_default();
-    let south_east_longitude = params
-        .get("southEastLongitude")
-        .and_then(|v| v.parse::<f32>().ok())
-        .unwrap_or_default();
+    let north_west_latitude: f32 = get_query_parameter(&params, "northWestLatitude");
+    let north_west_longitude: f32 = get_query_parameter(&params, "northWestLongitude");
+    let south_east_latitude: f32 = get_query_parameter(&params, "southEastLatitude");
+    let south_east_longitude: f32 = get_query_parameter(&params, "southEastLongitude");
 
     let track_information = TrackInformation::new(
         north_west_latitude,
