@@ -26,12 +26,12 @@
         <button mat-flat-button (click)="showTracksForCurrentScreen()"
             matTooltip="Show all tracks that have a point in the displayed area">
             <span class="button-text">Show tracks</span>
-            <span class="button-icon material-icons">track_changes</span>
+            <span class="button-icon material-icons">show_chart</span>
         </button>
         <button mat-flat-button (click)="showHeatmapForCurrentScreen()"
             matTooltip="Show the heatmap of all tracks">
             <span class="button-text">Show heatmap</span>
-            <span class="button-icon material-icons">blur_on</span>
+            <span class="button-icon material-icons">share_location</span>
         </button>
         <button mat-raised-button
             [disabled]="displayedTracks.length == 0 && displayedHeatmap.length==0"
@@ -47,7 +47,7 @@
             color="secondary"
             (click)="setFilters()">
             <span class="button-text">Filters</span>
-            <span class="button-icon material-icons">filter</span>
+            <span class="button-icon material-icons">filter_alt</span>
             <!-- Add a badge if filters are active -->
             @if(trackFilters){
             <span class="filter-active-indicator"></span>

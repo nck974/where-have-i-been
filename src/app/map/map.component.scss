@@ -4,7 +4,8 @@
     left: 0;
     right: 0;
     bottom: 0;
-    margin: 30px;
+    margin: 1rem;
+
 }
 
 .map-frame {
@@ -50,7 +51,7 @@
     }
 
     // Badge around the active filter
-    .filter-active-indicator{
+    .filter-active-indicator {
         display: inline-block;
         background-color: red;
         border-radius: 50%;
