@@ -2,225 +2,153 @@ use rusqlite::{named_params, params, Connection, Result};
 
 use crate::{model::track::TrackInformation, utils::environment::get_database_path};
 
-pub fn get_database_connection() -> Result<Connection> {
-    Connection::open(get_database_path())
+use super::query::track::{
+    CREATE_TRACKS_TABLE, CREATE_TRACK_COORDINATES_INDEX, CREATE_TRACK_FILENAME_INDEX,
+    GET_ALL_ACTIVITY_TYPES, GET_ALL_TRACK_FILENAMES, GET_TRACKS_INSIDE_LOCATION, INSERT_TRACK,
+};
+
+pub struct TracksDatabase {
+    pub conn: Connection,
 }
 
-/// .Creates the sqlite database if it does not already exist
-///
-/// # Errors
-///
-/// This function will return an error if the database can not be created.
-pub fn initialize_tracks_table(conn: &mut Connection) -> Result<(), rusqlite::Error> {
-    conn.execute(
-        "CREATE TABLE IF NOT EXISTS tracks (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            filename TEXT NOT NULL,
-            north_west_latitude REAL NOT NULL,
-            north_west_longitude REAL NOT NULL,
-            south_east_latitude REAL NOT NULL,
-            south_east_longitude REAL NOT NULL,
-            date DATE,
-            is_empty_track INTEGER NOT NULL,
-            activity_type TEXT NOT NULL
-        );
-    )",
-        (), // no params
-    )?;
-
-    Ok(())
-}
-
-pub fn read_files_in_database(conn: &mut Connection) -> Vec<String> {
-    let mut select_statement = conn.prepare("SELECT filename FROM tracks;").unwrap();
-    let rows = select_statement
-        .query_map([], |row| Ok(row.get::<_, String>(0)?))
-        .unwrap();
-    let mut files: Vec<String> = Vec::new();
-    for filename in rows {
-        match filename {
-            Ok(file) => files.push(file),
-            Err(e) => {
-                eprintln!("Error: Failed to read value - {}", e);
-            }
-        }
-    }
-    files
-}
-
-pub fn create_tracks_index(conn: &mut Connection) -> Result<(), rusqlite::Error> {
-    let index_queries = vec![
-        "CREATE INDEX idx_filename ON tracks (filename);",
-        "CREATE INDEX idx_square ON tracks (north_west_latitude, north_west_longitude, south_east_latitude, south_east_longitude);",
-    ];
-
-    for index_query in index_queries {
-        let result = conn.execute(index_query, []);
-
-        match result {
-            Ok(_) => {
-                println!("Index created.");
-            }
-            Err(_) => {
-                println!("Index can not be created.")
-            }
-        }
+impl TracksDatabase {
+    pub fn new() -> Result<Self> {
+        let conn = Connection::open(get_database_path())?;
+        Ok(Self { conn })
     }
 
-    Ok(())
-}
+    pub fn initialize_table(&self) -> Result<(), rusqlite::Error> {
+        self.conn.execute(CREATE_TRACKS_TABLE, ())?;
 
-pub fn insert_file(
-    conn: &mut Connection,
-    filename: &str,
-    track_information: TrackInformation,
-    is_empty_track: bool,
-) -> Result<(), rusqlite::Error> {
-    conn.execute(
-        "INSERT INTO 
-            tracks (
-                filename, 
-                north_west_latitude,
-                north_west_longitude,
-                south_east_latitude,
-                south_east_longitude,
+        Ok(())
+    }
+
+    pub fn get_all_filenames(&self) -> Vec<String> {
+        let mut select_statement = self.conn.prepare(GET_ALL_TRACK_FILENAMES).unwrap();
+        let rows = select_statement
+            .query_map([], |row| Ok(row.get::<_, String>(0)?))
+            .unwrap();
+        let mut files: Vec<String> = Vec::new();
+        for filename in rows {
+            match filename {
+                Ok(file) => files.push(file),
+                Err(e) => {
+                    eprintln!("Error: Failed to read value - {}", e);
+                }
+            }
+        }
+        files
+    }
+
+    pub fn create_table_indices(&self) -> Result<(), rusqlite::Error> {
+        let index_queries = vec![CREATE_TRACK_FILENAME_INDEX, CREATE_TRACK_COORDINATES_INDEX];
+
+        for index_query in index_queries {
+            let result = self.conn.execute(index_query, []);
+
+            match result {
+                Ok(_) => {
+                    println!("Index created.");
+                }
+                Err(_) => {
+                    println!("Index can not be created.")
+                }
+            }
+        }
+
+        Ok(())
+    }
+
+    pub fn insert_new_file(
+        &self,
+        filename: &str,
+        track_information: TrackInformation,
+        is_empty_track: bool,
+    ) -> Result<(), rusqlite::Error> {
+        self.conn.execute(
+            INSERT_TRACK,
+            params![
+                filename,
+                track_information.north_west_latitude,
+                track_information.north_west_longitude,
+                track_information.south_east_latitude,
+                track_information.south_east_longitude,
                 is_empty_track,
-                date,
-                activity_type
-            ) 
-        VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8)",
-        params![
-            filename,
-            track_information.north_west_latitude,
-            track_information.north_west_longitude,
-            track_information.south_east_latitude,
-            track_information.south_east_longitude,
-            is_empty_track,
-            track_information.date,
-            track_information.activity_type
-        ],
-    )?;
+                track_information.date,
+                track_information.activity_type
+            ],
+        )?;
 
-    Ok(())
-}
-
-pub fn get_tracks_inside_location(track_information: TrackInformation) -> Result<Vec<String>> {
-    let conn = Connection::open(get_database_path()).unwrap();
-
-    let mut query = String::from(
-        "SELECT 
-	filename
-FROM 
-	tracks t 
-WHERE 
-    is_empty_track IS FALSE
-    AND
-        (
-            /* Check provided north west is contained inside one track limits*/
-            (
-                :provided_north_west_latitude<= t.north_west_latitude AND  :provided_north_west_latitude >= t.south_east_latitude AND
-                :provided_north_west_longitude >= t.north_west_longitude AND :provided_north_west_longitude <= t.south_east_longitude
-            )
-            /* Check provided limits contain track north west*/
-            OR (
-                t.north_west_latitude <= :provided_north_west_latitude AND t.north_west_latitude >= :provided_south_east_latitude AND
-                t.north_west_longitude >= :provided_north_west_longitude AND t.north_west_longitude  <= :provided_south_east_longitude
-            )
-            /* Check provided south west is contained inside one track limits*/
-            OR (
-                :provided_south_east_latitude<= t.north_west_latitude AND  :provided_south_east_latitude >= t.south_east_latitude AND
-                :provided_north_west_longitude >= t.north_west_longitude AND :provided_north_west_longitude <= t.south_east_longitude
-            )
-            /* Check provided limits contain track south west*/
-            OR (
-                t.south_east_latitude <= :provided_north_west_latitude AND t.south_east_latitude >= :provided_south_east_latitude AND
-                t.north_west_longitude >= :provided_north_west_longitude AND t.north_west_longitude  <= :provided_south_east_longitude
-            )
-            /* Check provided north east is contained inside one track limits*/
-            OR(
-                :provided_north_west_latitude<= t.north_west_latitude AND  :provided_north_west_latitude >= t.south_east_latitude AND
-                :provided_south_east_longitude >= t.north_west_longitude AND :provided_south_east_longitude <= t.south_east_longitude
-            )
-            /* Check provided limits contain track north east*/
-            OR (
-                t.north_west_latitude <= :provided_north_west_latitude AND t.north_west_latitude >= :provided_south_east_latitude AND
-                t.south_east_longitude >= :provided_north_west_longitude AND t.south_east_longitude  <= :provided_south_east_longitude
-            )
-            /* Check provided south east is contained inside one track limits*/
-            OR (
-                :provided_south_east_latitude<= t.north_west_latitude AND  :provided_south_east_latitude >= t.south_east_latitude AND
-                :provided_south_east_longitude >= t.north_west_longitude AND :provided_south_east_longitude <= t.south_east_longitude
-            )
-            /* Check provided limits contain track south east*/
-            OR (
-                t.south_east_latitude <= :provided_north_west_latitude AND t.south_east_latitude >= :provided_south_east_latitude AND
-                t.south_east_longitude >= :provided_north_west_longitude AND t.south_east_longitude  <= :provided_south_east_longitude
-            )
-        )"
-    );
-
-    if !track_information.activity_type.is_empty() {
-        query.push_str(" AND t.activity_type = :activity_type");
-    } else {
-        // TODO: Solve this in a cleaner way. named_params does not allow conditionally adding filters
-        query.push_str(
-            " AND (t.activity_type = :activity_type OR t.activity_type != :activity_type)",
-        );
+        Ok(())
     }
 
-    let mut stmt = conn.prepare(&query)?;
+    pub fn get_tracks_inside_location(
+        &self,
+        track_information: TrackInformation,
+    ) -> Result<Vec<String>> {
+        let mut query = String::from(GET_TRACKS_INSIDE_LOCATION);
 
-    let params = named_params! {
-        ":provided_north_west_latitude": track_information.north_west_latitude,
-        ":provided_north_west_longitude": track_information.north_west_longitude,
-        ":provided_south_east_latitude": track_information.south_east_latitude,
-        ":provided_south_east_longitude": track_information.south_east_longitude,
-        ":activity_type": track_information.activity_type
-    };
+        if !track_information.activity_type.is_empty() {
+            query.push_str(" AND t.activity_type = :activity_type");
+        } else {
+            // TODO: Solve this in a cleaner way. named_params does not allow conditionally adding filters
+            query.push_str(
+                " AND (t.activity_type = :activity_type OR t.activity_type != :activity_type)",
+            );
+        }
 
-    let filenames = stmt
-        .query_map(params, |row| Ok(row.get::<_, String>(0)?))
-        .unwrap();
+        let mut stmt = self.conn.prepare(&query)?;
 
-    let mut files = Vec::new();
-    for filename in filenames {
-        match filename {
-            Ok(f) => {
-                files.push(f);
-            }
-            Err(e) => {
-                eprintln!("Error retrieving filename: {}", e);
+        let params = named_params! {
+            ":provided_north_west_latitude": track_information.north_west_latitude,
+            ":provided_north_west_longitude": track_information.north_west_longitude,
+            ":provided_south_east_latitude": track_information.south_east_latitude,
+            ":provided_south_east_longitude": track_information.south_east_longitude,
+            ":activity_type": track_information.activity_type
+        };
+
+        let filenames = stmt
+            .query_map(params, |row| Ok(row.get::<_, String>(0)?))
+            .unwrap();
+
+        let mut files = Vec::new();
+        for filename in filenames {
+            match filename {
+                Ok(f) => {
+                    files.push(f);
+                }
+                Err(e) => {
+                    eprintln!("Error retrieving filename: {}", e);
+                }
             }
         }
+        dbg!(&files);
+
+        Ok(files)
     }
-    dbg!(&files);
 
-    Ok(files)
-}
+    pub fn get_all_activity_types(&self) -> Result<Vec<String>> {
+        let query = String::from(GET_ALL_ACTIVITY_TYPES);
 
-pub fn get_all_activity_types() -> Result<Vec<String>> {
-    let conn = Connection::open(get_database_path()).unwrap();
+        let mut stmt = self.conn.prepare(&query)?;
 
-    let query = String::from("SELECT DISTINCT t.activity_type FROM tracks t WHERE t.activity_type != '' ORDER BY 1;");
+        let activities = stmt
+            .query_map((), |row| Ok(row.get::<_, String>(0)?))
+            .unwrap();
 
-    let mut stmt = conn.prepare(&query)?;
-
-    let activities = stmt
-        .query_map((), |row| Ok(row.get::<_, String>(0)?))
-        .unwrap();
-
-    let mut activity_types = Vec::new();
-    for activity in activities {
-        match activity {
-            Ok(f) => {
-                activity_types.push(f);
-            }
-            Err(e) => {
-                eprintln!("Error retrieving activity: {}", e);
+        let mut activity_types = Vec::new();
+        for activity in activities {
+            match activity {
+                Ok(f) => {
+                    activity_types.push(f);
+                }
+                Err(e) => {
+                    eprintln!("Error retrieving activity: {}", e);
+                }
             }
         }
-    }
-    dbg!(&activity_types);
+        dbg!(&activity_types);
 
-    Ok(activity_types)
+        Ok(activity_types)
+    }
 }

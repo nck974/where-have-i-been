@@ -10,19 +10,16 @@ use std::path::Path;
 use std::process::exit;
 use std::time::Instant;
 
-use tower_http::cors::{Any, CorsLayer};
 use axum::http::header::CONTENT_TYPE;
 use axum::http::Method;
 use axum::Router;
-use database::heatmap::{create_heatmap_index, initialize_heatmap_table, update_heatmap};
-use database::tracks::{
-    create_tracks_index, get_database_connection, initialize_tracks_table, insert_file,
-    read_files_in_database,
-};
+use database::heatmap::HeatmapDatabase;
+use database::tracks::TracksDatabase;
 use files::files::get_track_information;
 use files::gz::decompress_all_gz_files;
 use model::coordinate::{Coordinate, StringifiedCoordinate};
 use model::track::TrackInformation;
+use tower_http::cors::{Any, CorsLayer};
 use utils::{
     cache_utils::save_cached_coordinates,
     environment::{get_cache_directory, get_tracks_directory},
@@ -50,14 +47,15 @@ fn add_coordinates_to_heatmap(
 fn initialize_data() {
     let start = Instant::now();
 
-    let mut conn = get_database_connection().unwrap();
+    let tracks_db = TracksDatabase::new().unwrap();
+    let mut heatmap_db = HeatmapDatabase::new().unwrap();
 
-    initialize_tracks_table(&mut conn).unwrap();
-    initialize_heatmap_table(&mut conn).unwrap();
+    tracks_db.initialize_table().unwrap();
+    heatmap_db.initialize_table().unwrap();
 
     // Get what is already stored in the database to avoid processing again the same files
     // that have already been processed
-    let processed_files = read_files_in_database(&mut conn);
+    let processed_files = tracks_db.get_all_filenames();
 
     // Create the folder where the simplified gpx tracks will be stored
     let cache_directory = get_cache_directory();
@@ -82,34 +80,34 @@ fn initialize_data() {
 
         let track = get_track_information(file_path.as_path());
         if let Ok((track_information, coordinates)) = track {
-            insert_file(&mut conn, &filename, track_information, false).unwrap();
+            tracks_db
+                .insert_new_file(&filename, track_information, false)
+                .unwrap();
             save_cached_coordinates(cache_path, &filename, &coordinates).unwrap();
             add_coordinates_to_heatmap(&mut heatmap, &coordinates);
         } else if let Err(e) = track {
             eprintln!("No track information found for {}", filename);
             eprintln!("Error: {}", e);
-            insert_file(
-                &mut conn,
-                &filename,
-                TrackInformation::create_empty_track(),
-                true,
-            )
-            .unwrap();
+            // The file is still inserted to prevent duplicated analysis on the next restart
+            tracks_db
+                .insert_new_file(&filename, TrackInformation::create_empty_track(), true)
+                .unwrap();
         }
     }
 
     println!("Saving heatmap...");
-    if let Err(err) = update_heatmap(&mut conn, &mut heatmap) {
+    if let Err(err) = heatmap_db.update_heatmap(&mut heatmap) {
         eprintln!("Error saving heatmap in the database: {}", err);
         exit(1)
     }
 
-    println!("Creating indexes...");
-    create_heatmap_index(&mut conn).unwrap();
-    create_tracks_index(&mut conn).unwrap();
+    println!("Creating indices...");
+    heatmap_db.create_table_indices().unwrap();
+    tracks_db.create_table_indices().unwrap();
 
     // Release connection
-    conn.close().unwrap();
+    tracks_db.conn.close().unwrap();
+    heatmap_db.conn.close().unwrap();
 
     println!("Initialization took: {:?}", start.elapsed());
 }
