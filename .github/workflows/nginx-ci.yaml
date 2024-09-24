@@ -1,0 +1,57 @@
+name: NGINX Docker Image CI
+
+on:
+  workflow_dispatch:
+
+env:
+  IMAGE_NAME: nck974/where-have-i-been-nginx
+  CODE_DIRECTORY: wherehaveibeen-nginx
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Extract version from VERSION file
+        id: extract_version
+        run: |
+          VERSION=$(cat $CODE_DIRECTORY/VERSION)
+          echo "VERSION=$VERSION"
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build Docker image
+        run: |
+          # The project is inside another folder
+          cd $CODE_DIRECTORY 
+          docker build -f Dockerfile -t $IMAGE_NAME:$VERSION . --no-cache
+          cd -
+
+      - name: Push Docker image to Docker Hub
+        run: |
+          docker tag $IMAGE_NAME:$VERSION $IMAGE_NAME:$VERSION
+          docker tag $IMAGE_NAME:$VERSION $IMAGE_NAME:latest
+          docker push $IMAGE_NAME:$VERSION
+          docker push $IMAGE_NAME:latest
+
+      - name: Update docker-compose.yaml with the new version
+        run: |
+          sed -i "s|image: $IMAGE_NAME:.*|image: $IMAGE_NAME:$VERSION|" docker-compose.yaml
+          echo "New docker-compose.yaml:"
+          cat docker-compose.yaml
+
+      - name: Commit updated docker-compose.yaml
+        run: |
+          git config --global user.name "github-actions"
+          git config --global user.email "github-actions@github.com"
+          git add docker-compose.yaml
+          git commit -m "Update docker-compose.yaml with $IMAGE_NAME version $VERSION"
+          git push
