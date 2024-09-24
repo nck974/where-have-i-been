@@ -15,9 +15,27 @@ This has been tested with the files provided by an export of the personal data o
 
 1. Pull this project or just the `docker-compose.yaml` file into a folder.
 2. On the same folder create a `data` folder with all your gps tracks.
-3. Start the stack with `docker-compose up -d`.
-4. The first start may take a while until all tracks have been processed.
-5. Access with the browser to the configured domain and port `8080`.
+3. Add a certificate or create a self signed certificate to an `ssl` folder:
+
+    ```bash
+    ├── docker-compose.yaml
+    ├── .env
+    └── ssl
+        ├── cert.key
+        └── cert.pem
+    ```
+
+    3.1. Example of self signed certificate:
+
+    ```bash
+    mkdir ssl
+    cd ssl
+    openssl req -x509 -newkey rsa:4096 -keyout cert.key -out cert.pem -sha256 -days 3650 -nodes -subj "/C=XX/ST=StateName/L=CityName/O=CompanyName/OU=CompanySectionName/CN=CommonNameOrHostname"
+    ```
+
+4. Start the stack with `docker-compose up -d`.
+5. The first start may take a while until all tracks have been processed.
+6. Access with the browser to the configured domain and port `443`.
 
 ## Configuration
 
