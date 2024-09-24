@@ -6,7 +6,7 @@ volumes:
 services:
   where-have-i-been-nginx:
     container_name: where-have-i-been-nginx
-    image: nck974/where-have-i-been-nginx:1.0.1
+    image: nck974/where-have-i-been-nginx:1.0.2
     restart: unless-stopped
     depends_on:
       - where-have-i-been-rs
